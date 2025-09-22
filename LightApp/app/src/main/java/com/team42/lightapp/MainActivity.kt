@@ -21,7 +21,7 @@ class MainActivity : ComponentActivity() {
             LightAppTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Greeting(
-                        name = "Android",
+                        name = "Team 42",
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
@@ -42,6 +42,6 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
 @Composable
 fun GreetingPreview() {
     LightAppTheme {
-        Greeting("Android")
+        Greeting("Team 42")
     }
 }
