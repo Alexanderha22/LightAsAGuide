@@ -1,0 +1,68 @@
+<?xml version="1.0" ?>
+<!--GENERATED FILE, PLEASE DO NOT EDIT!!!--><EXT object="seniordesign" version="4">
+  <OBJECT>
+    <ID name="seniordesign" mc="Standard.Package" uid="6d14d206-1dcf-49a8-81cd-b1361b092b1d"/>
+    <PID name="SeniorDesign" mc="Standard.Project" uid="6bd9fc1f-bc7f-4c63-8644-85ab7cb45fe6"/>
+    <ATTRIBUTES>
+      <ATT name="IsInstantiable">false</ATT>
+      <ATT name="IsAbstract">false</ATT>
+      <ATT name="IsLeaf">false</ATT>
+      <ATT name="IsRoot">false</ATT>
+      <ATT name="Visibility">Public</ATT>
+      <ATT name="Name"><![CDATA[seniordesign]]></ATT>
+      <ATT name="status">1970354901745664</ATT>
+    </ATTRIBUTES>
+    <DEPENDENCIES>
+      <COMP relation="OwnedElement">
+        <COMPID name="HardwareSystem" mc="Standard.Class" uid="c3461ca2-403f-41b4-9f78-fa36d5628316"/>
+        <COMPID name="Session" mc="Standard.Class" uid="9dc182a7-9b3d-4ab8-9506-5943d1dacafc"/>
+        <COMPID name="SessionBlock" mc="Standard.Class" uid="165938e2-95de-4247-ac6e-65feac138afb"/>
+        <COMPID name="LightSource" mc="Standard.DataType" uid="ea745550-b395-4118-a521-dbe5f9a427d7"/>
+        <OBJECT>
+          <ID name="LightPattern" mc="Standard.Enumeration" uid="f684054a-d3ed-434e-b60f-ba3e4ec49065"/>
+          <ATTRIBUTES>
+            <ATT name="IsElementary">true</ATT>
+            <ATT name="IsAbstract">false</ATT>
+            <ATT name="IsLeaf">false</ATT>
+            <ATT name="IsRoot">false</ATT>
+            <ATT name="Visibility">Public</ATT>
+            <ATT name="Name"><![CDATA[LightPattern]]></ATT>
+            <ATT name="status">1970354901745664</ATT>
+          </ATTRIBUTES>
+          <DEPENDENCIES>
+            <COMP relation="Value">
+              <OBJECT>
+                <ID name="LINEAR" mc="Standard.EnumerationLiteral" uid="66b90313-dddc-410b-a159-ea22ab4495a4"/>
+                <ATTRIBUTES>
+                  <ATT name="Name"><![CDATA[LINEAR]]></ATT>
+                  <ATT name="status">1970354901745664</ATT>
+                </ATTRIBUTES>
+                <DEPENDENCIES></DEPENDENCIES>
+              </OBJECT>
+              <OBJECT>
+                <ID name="BEZIER" mc="Standard.EnumerationLiteral" uid="b40e75cf-660b-4636-a9d0-5d939e21ee29"/>
+                <ATTRIBUTES>
+                  <ATT name="Name"><![CDATA[BEZIER]]></ATT>
+                  <ATT name="status">1970354901745664</ATT>
+                </ATTRIBUTES>
+                <DEPENDENCIES></DEPENDENCIES>
+              </OBJECT>
+              <OBJECT>
+                <ID name="OTHER" mc="Standard.EnumerationLiteral" uid="02824c74-d193-4d70-997a-db06dd2d387b"/>
+                <ATTRIBUTES>
+                  <ATT name="Name"><![CDATA[OTHER]]></ATT>
+                  <ATT name="status">1970354901745664</ATT>
+                </ATTRIBUTES>
+                <DEPENDENCIES></DEPENDENCIES>
+              </OBJECT>
+            </COMP>
+          </DEPENDENCIES>
+        </OBJECT>
+        <COMPID name="Data Type" mc="Standard.DataType" uid="db1121ad-3116-4836-918c-d5779b763673"/>
+      </COMP>
+      <COMP relation="Product">
+        <COMPID name="Backend" mc="Standard.ClassDiagram" uid="b354c29b-55ba-44cf-af1b-89af5a4f1cdb"/>
+      </COMP>
+    </DEPENDENCIES>
+  </OBJECT>
+</EXT>
