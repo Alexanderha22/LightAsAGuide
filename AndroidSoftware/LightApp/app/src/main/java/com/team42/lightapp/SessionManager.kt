@@ -1,16 +1,157 @@
 package com.team42.lightapp
 
-import android.hardware.lights.Light
-import android.se.omapi.Session
+import android.content.Context
+import java.io.File
+
 
 object SessionManager
 {
+    // All functions need to pass context, so they can get the file directory
+    // Context can be any fragment or activity
+    // example from HomeFragment: getSessionList(this)
+
     // Returns a list of the saved sessions' names
-    fun getSessionList() : list<String> {return emptyList<String>()};
+    // getSessionList(context: Context) : List<String>
 
     // Returns the LightSession corresponding to the name
-    fun getSession() : LightSession {return emptyList<SessionBlock>()};
+    // fun getSession(context: Context, sessionName : String) : LightSession
 
-    // Saves the session with the name
-    fun SaveSession(sessionName : String) {};
+    // Saves the session with the name, needs HardwareSystem for the sectionCount
+    //fun saveSession(context: Context, system: HardwareSystem, session: LightSession, sessionName : String)
+}
+
+
+fun SessionManager.getSessionList(context: Context) : List<String>
+{
+    // Find session folder, create one if it does not exist
+    val sessionFolder = File(context.getFilesDir(), "Sessions")
+    if (!sessionFolder.exists())
+    {
+        sessionFolder.mkdirs()
+        return emptyList()
+    }
+
+    val sessionListFiles = sessionFolder.listFiles()
+    val sessionList = mutableListOf<String>()
+
+    if(sessionListFiles.isNullOrEmpty())
+    {
+        // Return empty
+        return sessionList
+    }
+
+    for(file in sessionListFiles)
+    {
+        // Confirm filetype
+        if(file.extension == "session")
+        {
+            sessionList.add(file.nameWithoutExtension)
+        }
+    }
+    return sessionList
+}
+
+fun SessionManager.getSession(context: Context, sessionName : String) : LightSession
+{
+    // Find session folder, create one if it does not exist
+    val sessionFolder = File(context.getFilesDir(), "Sessions")
+    if (!sessionFolder.exists())
+    {
+        sessionFolder.mkdirs()
+        return LightSession(sessionName)
+    }
+
+    // Find specific file
+    val file = File(sessionFolder, sessionName)
+
+    // Create empty session to return
+    val returnSession = mutableListOf<SessionBlock>()
+
+    if (file.exists() && file.canRead())
+    {
+        parseFile(file, returnSession)
+    }
+
+    // Convert from mutable list to list
+    return LightSession(sessionName, returnSession)
+}
+
+private fun parseFile(file : File, outSession : MutableList<SessionBlock>)
+{
+    val lines = file.readLines()
+
+    try
+    {
+        // Throws error
+        val sectionCount = lines[0].toInt()
+
+        // Check for correct blocks. Each block has sectionCount+1 lines (Extra line for timestamp)
+        val blockCount : Double = (lines.count() - 1).toDouble() / (sectionCount + 1)
+        if(blockCount % 1 != 0.0)
+        {
+            // Invalid file
+            return
+        }
+
+        // Get block data
+        for(i in 0 until blockCount.toInt())
+        {
+            val index = 1 + i * (sectionCount + 1)
+
+            // Timestamp, throws error
+            val timeStamp = lines[index].toDouble()
+
+            // Get all light data
+            val lights = mutableListOf<LightSource>()
+            for (j in 1 until 1+sectionCount)
+            {
+                // Brightness / Frequency, throws error
+                val values = lines[index + j].split(",")
+                val brightness = values[0].toDouble()
+                val frequency = values[1].toDouble()
+
+                lights.add(LightSource(brightness, frequency))
+            }
+
+            // Add the full block
+            outSession.add(SessionBlock(lights.toList(), timeStamp))
+        }
+    }
+    catch (_ : Throwable)
+    {
+        // Invalid conversion from string to double or int
+        return
+    }
+}
+
+fun SessionManager.saveSession(context: Context, system: HardwareSystem, session: LightSession, sessionName : String)
+{
+    // Find session folder, create one if it does not exist
+    val sessionFolder = File(context.getFilesDir(), "Sessions")
+    if (!sessionFolder.exists())
+    {
+        sessionFolder.mkdirs()
+    }
+
+    // Find specific file, create if it does not exist
+    val file = File(sessionFolder, "$sessionName.session")
+    if(!file.exists())
+    {
+        file.createNewFile()
+    }
+
+    // Header info
+    file.writeText(system.sectionCount.toString() + "\n")
+
+    for(block in session.blocks)
+    {
+        // Timestamp
+        file.appendText(block.timeStamp.toString() + "\n")
+
+        // Light Info
+        for(source in block.lights)
+        {
+            file.appendText("${source.brightness},${source.frequency}\n")
+        }
+    }
 }
