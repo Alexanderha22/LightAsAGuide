@@ -1,5 +1,19 @@
 package com.team42.lightapp.ui.debug
 
+import android.Manifest
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothManager
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import androidx.annotation.RequiresPermission
+import androidx.core.app.ActivityCompat.startActivityForResult
+import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.getSystemService
+import androidx.core.content.ContextCompat.registerReceiver
+
 import androidx.lifecycle.ViewModel
 import com.team42.lightapp.HardwareSystem
 import com.team42.lightapp.LightSession
@@ -10,6 +24,8 @@ import com.team42.lightapp.deleteSession
 import com.team42.lightapp.getSession
 import com.team42.lightapp.getSessionList
 import com.team42.lightapp.saveSession
+
+
 
 
 class DebugViewModel : ViewModel()
@@ -73,3 +89,4 @@ class DebugViewModel : ViewModel()
     }
 
 }
+
