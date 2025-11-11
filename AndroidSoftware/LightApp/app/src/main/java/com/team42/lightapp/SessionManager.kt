@@ -6,30 +6,37 @@ import java.io.File
 
 object SessionManager
 {
-    // All functions need to pass context, so they can get the file directory
-    // Context can be any fragment or activity
-    // example from HomeFragment: getSessionList(this)
-
     // Returns a list of the saved sessions' names
-    // getSessionList(context: Context) : List<String>
+    // getSessionList() : List<String>
 
     // Returns the LightSession corresponding to the name
-    // fun getSession(context: Context, sessionName : String) : LightSession
+    // fun getSession(sessionName : String) : LightSession
 
     // Saves the session with the name, needs HardwareSystem for the sectionCount
-    //fun saveSession(context: Context, system: HardwareSystem, session: LightSession, sessionName : String)
+    //fun saveSession(system: HardwareSystem, session: LightSession, sessionName : String)
+
+    // Deletes the LightSession corresponding to the name
+    // fun deleteSession(sessionName: String)
+
+
+    // This function MUST be called before any files can be saved
+    // SessionManager.getFolder(requireContext())
+    var sessionFolder : File = File("")
+    fun getFolder(context: Context)
+    {
+        sessionFolder = File(context.getFilesDir(), "Sessions")
+        if (!sessionFolder.exists())
+        {
+            val success = sessionFolder.mkdirs()
+        }
+    }
+
+
 }
 
 
-fun SessionManager.getSessionList(context: Context) : List<String>
+fun SessionManager.getSessionList() : List<String>
 {
-    // Find session folder, create one if it does not exist
-    val sessionFolder = File(context.getFilesDir(), "Sessions")
-    if (!sessionFolder.exists())
-    {
-        sessionFolder.mkdirs()
-        return emptyList()
-    }
 
     val sessionListFiles = sessionFolder.listFiles()
     val sessionList = mutableListOf<String>()
@@ -51,18 +58,11 @@ fun SessionManager.getSessionList(context: Context) : List<String>
     return sessionList
 }
 
-fun SessionManager.getSession(context: Context, sessionName : String) : LightSession
+fun SessionManager.getSession(sessionName : String) : LightSession
 {
-    // Find session folder, create one if it does not exist
-    val sessionFolder = File(context.getFilesDir(), "Sessions")
-    if (!sessionFolder.exists())
-    {
-        sessionFolder.mkdirs()
-        return LightSession(sessionName)
-    }
 
     // Find specific file
-    val file = File(sessionFolder, sessionName)
+    val file = File(sessionFolder, "$sessionName.session")
 
     // Create empty session to return
     val returnSession = mutableListOf<SessionBlock>()
@@ -124,17 +124,11 @@ private fun parseFile(file : File, outSession : MutableList<SessionBlock>)
     }
 }
 
-fun SessionManager.saveSession(context: Context, system: HardwareSystem, session: LightSession, sessionName : String)
+fun SessionManager.saveSession(system: HardwareSystem, session: LightSession)
 {
-    // Find session folder, create one if it does not exist
-    val sessionFolder = File(context.getFilesDir(), "Sessions")
-    if (!sessionFolder.exists())
-    {
-        sessionFolder.mkdirs()
-    }
 
     // Find specific file, create if it does not exist
-    val file = File(sessionFolder, "$sessionName.session")
+    val file = File(sessionFolder, "${session.name}.session")
     if(!file.exists())
     {
         file.createNewFile()
@@ -153,5 +147,15 @@ fun SessionManager.saveSession(context: Context, system: HardwareSystem, session
         {
             file.appendText("${source.brightness},${source.frequency}\n")
         }
+    }
+}
+
+fun SessionManager.deleteSession(sessionName: String)
+{
+    // Find specific file, delete if it exists
+    val file = File(sessionFolder, "$sessionName.session")
+    if(file.exists())
+    {
+        file.delete()
     }
 }

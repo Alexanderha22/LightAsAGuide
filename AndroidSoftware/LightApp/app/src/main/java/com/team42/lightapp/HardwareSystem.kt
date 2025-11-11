@@ -48,3 +48,4 @@ class LEDInfo(
     val y : Int = 0,
     val section : Int = 0
 ) {}
+
