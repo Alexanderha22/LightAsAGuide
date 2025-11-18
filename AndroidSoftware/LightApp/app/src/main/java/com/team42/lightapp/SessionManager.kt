@@ -30,8 +30,6 @@ object SessionManager
             val success = sessionFolder.mkdirs()
         }
     }
-
-
 }
 
 

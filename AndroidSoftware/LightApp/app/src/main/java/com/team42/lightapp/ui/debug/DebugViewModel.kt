@@ -32,7 +32,7 @@ class DebugViewModel : ViewModel()
 {
     // TODO: Implement the ViewModel
 
-    fun saveSessionTest()
+    fun saveSessionTest(hs : HardwareSystem)
     {
         // Delete all saved
         var savedList = SessionManager.getSessionList()
@@ -45,8 +45,6 @@ class DebugViewModel : ViewModel()
         // Should be empty
         savedList = SessionManager.getSessionList()
 
-
-        val hs = HardwareSystem()
         hs.sectionCount = 4
 
         val session = LightSession("Test0")
