@@ -28,40 +28,27 @@
 
             android:text="Get Permission" />
 
-        <LinearLayout
-            style="?android:attr/buttonBarStyle"
+        <Button
+            android:id="@+id/btConnect"
+            style="?android:attr/buttonBarButtonStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:weightSum="3">
 
-            <Button
-                android:id="@+id/btConnect"
-                style="?android:attr/buttonBarButtonStyle"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
+            android:text="Connect" />
 
-                android:text="Connect" />
+        <Button
+            android:id="@+id/btSendSession"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
 
-            <Button
-                android:id="@+id/btStart"
-                style="?android:attr/buttonBarButtonStyle"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
+            android:text="Send Session Test" />
 
-                android:text="Start Thread" />
+        <Button
+            android:id="@+id/btParseTest"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
 
-            <Button
-                android:id="@+id/btSend"
-                style="?android:attr/buttonBarButtonStyle"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-
-                android:text="Send Test" />
-        </LinearLayout>
+            android:text="Parse Received Message Test" />
     </LinearLayout>
 
 

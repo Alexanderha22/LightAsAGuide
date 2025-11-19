@@ -1,19 +1,6 @@
 package com.team42.lightapp.ui.debug
 
-import android.Manifest
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothManager
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
-import androidx.annotation.RequiresPermission
-import androidx.core.app.ActivityCompat.startActivityForResult
-import androidx.core.content.ContextCompat
-import androidx.core.content.ContextCompat.getSystemService
-import androidx.core.content.ContextCompat.registerReceiver
-
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.team42.lightapp.HardwareSystem
 import com.team42.lightapp.LightSession
@@ -36,6 +23,7 @@ class DebugViewModel : ViewModel()
     {
         // Delete all saved
         var savedList = SessionManager.getSessionList()
+        Log.d("SaveTest", "Saved List Length Before: ${savedList.count()}")
 
         for (s in savedList)
         {
@@ -44,23 +32,24 @@ class DebugViewModel : ViewModel()
 
         // Should be empty
         savedList = SessionManager.getSessionList()
+        Log.d("SaveTest", "Saved List Length After: ${savedList.count()}")
 
         hs.sectionCount = 4
 
         val session = LightSession("Test0")
-        val lights = listOf<LightSource>(
+        val lights = mutableListOf(
             LightSource(0.0,    0.0),
             LightSource(100.0,  1.0),
             LightSource(85.3,   5.0),
             LightSource(0.0,    4.0))
 
-        val lights2 = listOf<LightSource>(
+        val lights2 = mutableListOf(
             LightSource(50.0,   1.0),
             LightSource(50.0,   2.0),
             LightSource(50.0,   3.0),
             LightSource(50.0,   4.0))
 
-        val lightsEnd = listOf<LightSource>(
+        val lightsEnd = mutableListOf(
             LightSource(0.0,   0.0),
             LightSource(0.0,   0.0),
             LightSource(0.0,   0.0),
@@ -83,6 +72,7 @@ class DebugViewModel : ViewModel()
         for (s in savedList)
         {
             foundSession = SessionManager.getSession(s)
+            Log.d("SaveTest", "Found Session Name: $s")
         }
     }
 

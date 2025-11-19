@@ -112,7 +112,7 @@ private fun parseFile(file : File, outSession : MutableList<SessionBlock>)
             }
 
             // Add the full block
-            outSession.add(SessionBlock(lights.toList(), timeStamp))
+            outSession.add(SessionBlock(lights, timeStamp))
         }
     }
     catch (_ : Throwable)

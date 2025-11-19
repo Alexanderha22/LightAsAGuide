@@ -2,41 +2,26 @@ package com.team42.lightapp.ui.debug
 
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.app.Activity
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothManager
-import android.bluetooth.BluetoothSocket
-import android.companion.BluetoothDeviceFilter
-import android.companion.AssociationRequest
-import android.companion.CompanionDeviceManager
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.Toast
 import androidx.annotation.RequiresApi
-import androidx.annotation.RequiresPermission
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
-import androidx.core.content.ContextCompat.getSystemService
-import androidx.core.content.ContextCompat.registerReceiver
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.team42.lightapp.HardwareSystem
+import com.team42.lightapp.LightSession
+import com.team42.lightapp.LightSource
 import com.team42.lightapp.R
+import com.team42.lightapp.SessionBlock
 import com.team42.lightapp.SessionManager
-import java.io.IOException
-import java.util.UUID
-
 
 class DebugFragment : Fragment() {
 
@@ -67,9 +52,8 @@ class DebugFragment : Fragment() {
         // Find the button by its ID
         val saveButton: Button = rootView.findViewById(R.id.savebutton)
         val btConnectButton : Button = rootView.findViewById(R.id.btConnect)
-        val btStartButton : Button = rootView.findViewById(R.id.btStart)
-        val btSendButton : Button = rootView.findViewById(R.id.btSend)
         val permissionButton : Button = rootView.findViewById(R.id.getPermission)
+        val btSendSessionButton : Button = rootView.findViewById(R.id.btSendSession)
 
         // Set a click listener on the button
         saveButton.setOnClickListener {
@@ -131,30 +115,79 @@ class DebugFragment : Fragment() {
             }
         }
 
-        btStartButton.setOnClickListener{
-            if(hs!!.startBTThread())
-            {
-                Toast.makeText(context, "Thread Started", Toast.LENGTH_SHORT).show()
-            }
-            else
-            {
-                Toast.makeText(context, "Thread failed to start", Toast.LENGTH_SHORT).show()
-            }
+        btSendSessionButton.setOnClickListener{
+            // Create test session
+            hs!!.sectionCount = 4
+
+            val session = LightSession("Test0")
+            val lights = mutableListOf(
+                LightSource(0.0,    0.0),
+                LightSource(100.0,  1.0),
+                LightSource(85.3,   5.0),
+                LightSource(0.0,    4.0)
+            )
+
+            val lights2 = mutableListOf(
+                LightSource(50.0,   1.0),
+                LightSource(50.0,   2.0),
+                LightSource(50.0,   3.0),
+                LightSource(50.0,   4.0)
+            )
+
+            val lightsEnd = mutableListOf(
+                LightSource(0.0,   0.0),
+                LightSource(0.0,   0.0),
+                LightSource(0.0,   0.0),
+                LightSource(0.0,   0.0)
+            )
+
+            session.blocks.add(SessionBlock(lights, 0.0))
+            session.blocks.add(SessionBlock(lights2, 5.0))
+            session.blocks.add(SessionBlock(lightsEnd, 10.0))
+
+            hs!!.uC_SendSession(session)
         }
 
-        btSendButton.setOnClickListener{
-            if(!hs!!.sendTest())
+        fun printParseResult()
+        {
+            Log.d("Parse", "SectionCount: ${hs!!.sectionCount}")
+            for(info in hs!!.ledList)
             {
-                Toast.makeText(context, "Thread not Started", Toast.LENGTH_SHORT).show()
+                Log.d("Parse", "X:${info.x} Y:${info.y} S:${info.section}")
+            }
+
+            hs!!.externalModuleMap.forEach {
+                    eID, module -> Log.d("Parse", "EID:$eID Name:${module.name} Description:${module.description}")
             }
         }
+        rootView.findViewById<Button>(R.id.btParseTest).setOnClickListener{
+            var incomingMessage = "SetInfo,3,3," +
+                    "0,0,0," +
+                    "0,1,1," +
+                    "1,1,2"
 
+            hs!!.parseTest(incomingMessage)
+            printParseResult()
+
+            incomingMessage = "SetInfo,10,2,"
+            for(i in 0 until 10)
+            {
+                incomingMessage += "$i,$i,${i%2},"
+            }
+            incomingMessage += "23,Input,E Module,This is an external device"
+            hs!!.parseTest(incomingMessage)
+            printParseResult()
+
+        }
 
         return rootView
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        hs?.closeConnection()
+        if(hs?.closeConnection() == true)
+        {
+            Toast.makeText(context, "Disconnected", Toast.LENGTH_SHORT).show()
+        }
     }
 }
