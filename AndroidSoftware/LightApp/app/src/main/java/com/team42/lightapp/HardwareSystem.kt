@@ -29,13 +29,13 @@ class HardwareSystem(
     private val context: Context
 )
 {
-    // Hardware information
+    // Public Hardware Information
     var sectionCount = 0
     val ledList : MutableList<LEDInfo> = mutableListOf()
     val externalModuleMap : MutableMap<Int, ExternalModule> = mutableMapOf()
     var state : HardwareState = HardwareState.DISCONNECTED
 
-    // Finds the required bluetooth connection from the list of paired devices.
+    // Finds the required bluetooth connection from the list of paired devices, attempts to connect
     @RequiresApi(Build.VERSION_CODES.S)
     @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT])
     fun connectToPairedDevice() : Boolean
@@ -97,6 +97,12 @@ class HardwareSystem(
         }
 
         state = HardwareState.CONNECTED
+
+        // Previously initialized, maintain these values
+        if(sectionCount != 0)
+        {
+            state = HardwareState.INITIALIZED
+        }
         return true
     }
 
@@ -108,10 +114,12 @@ class HardwareSystem(
             return false
             //Log.e(TAG, "Could not close the connect socket", e)
         }
+        state = HardwareState.DISCONNECTED
         return true
     }
 
     // Functions to communicate with the microcontroller
+    // All functions should wait until the state is initialized (Except uC_GetInfo)
     fun uC_SendSession(session : LightSession)
     {
         var message = "SendSession,${session.blocks.count()},${sectionCount},\n"
@@ -246,7 +254,6 @@ class HardwareSystem(
             }
         }
     }
-
     private fun parseReceivedMessage(message : String)
     {
         val split = message.split(",")
@@ -322,7 +329,7 @@ class HardwareSystem(
     }
 
 
-    // Delete later
+    // Test Function, delete later
     fun parseTest(message: String)
     {
         parseReceivedMessage(message)
