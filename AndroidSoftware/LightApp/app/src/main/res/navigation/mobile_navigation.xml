@@ -22,4 +22,10 @@
         android:name="com.team42.lightapp.ui.notifications.NotificationsFragment"
         android:label="@string/title_notifications"
         tools:layout="@layout/fragment_notifications" />
+
+    <fragment
+        android:id="@+id/navigation_debug"
+        android:name="com.team42.lightapp.ui.debug.DebugFragment"
+        android:label="@string/title_debug"
+        tools:layout="@layout/fragment_debug" />
 </navigation>
