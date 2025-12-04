@@ -260,6 +260,7 @@ class HardwareSystem(
     {
         val split = message.split(",")
 
+
         when(split[0])
         {
             "SetInfo" -> {
@@ -322,6 +323,9 @@ class HardwareSystem(
                 {
                     Toast.makeText(context, "External Device with ID: ${split[1].toInt()} does not exist", Toast.LENGTH_SHORT).show()
                 }
+            }
+            "SendError" -> {
+                Toast.makeText(context, "Error: ${split[1]}", Toast.LENGTH_SHORT).show()
             }
             else -> Toast.makeText(context, "Unrecognized Command: ${split[0]}", Toast.LENGTH_SHORT).show()
         }
