@@ -14639,6 +14639,24 @@
                 "children": [
                     {
                         "children": [],
+                        "depends_on": null,
+                        "help": "Place LEDC control functions (ledc_update_duty and ledc_stop) into IRAM,\nso that these functions can be IRAM-safe and able to be called in an IRAM context.\nEnabling this option can improve driver performance as well.",
+                        "id": "LEDC_CTRL_FUNC_IN_IRAM",
+                        "name": "LEDC_CTRL_FUNC_IN_IRAM",
+                        "range": null,
+                        "title": "Place LEDC control functions into IRAM",
+                        "type": "bool"
+                    }
+                ],
+                "depends_on": null,
+                "id": "component-config-esp-driver-ledc-configurations",
+                "title": "ESP-Driver:LEDC Configurations",
+                "type": "menu"
+            },
+            {
+                "children": [
+                    {
+                        "children": [],
                         "depends_on": "!FREERTOS_PLACE_FUNCTIONS_INTO_FLASH && SOC_GPSPI_SUPPORTED",
                         "help": "Normally only the ISR of SPI master is placed in the IRAM, so that it\ncan work without the flash when interrupt is triggered.\nFor other functions, there's some possibility that the flash cache\nmiss when running inside and out of SPI functions, which may increase\nthe interval of SPI transactions.\nEnable this to put ``queue_trans``, ``get_trans_result`` and\n``transmit`` functions into the IRAM to avoid possible cache miss.\n\nThis configuration won't be available if `CONFIG_FREERTOS_PLACE_FUNCTIONS_INTO_FLASH` is enabled.\n\nDuring unit test, this is enabled to measure the ideal case of api.",
                         "id": "SPI_MASTER_IN_IRAM",

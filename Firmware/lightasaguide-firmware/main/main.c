@@ -22,6 +22,7 @@
 
 #include "time.h"
 #include "sys/time.h"
+#include "led.h"
 
 #define SPP_TAG "SPP_ACCEPTOR_DEMO"
 #define SPP_SERVER_NAME "SPP_SERVER"

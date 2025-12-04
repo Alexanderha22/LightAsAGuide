@@ -446,6 +446,13 @@ C:/Users/afia/source/repos/LightAsAGuide/Firmware/lightasaguide-firmware/build/e
 C:/Users/afia/source/repos/LightAsAGuide/Firmware/lightasaguide-firmware/build/esp-idf/bt/CMakeFiles/install.dir
 C:/Users/afia/source/repos/LightAsAGuide/Firmware/lightasaguide-firmware/build/esp-idf/bt/CMakeFiles/install/local.dir
 C:/Users/afia/source/repos/LightAsAGuide/Firmware/lightasaguide-firmware/build/esp-idf/bt/CMakeFiles/install/strip.dir
+C:/Users/afia/source/repos/LightAsAGuide/Firmware/lightasaguide-firmware/build/esp-idf/esp_driver_ledc/CMakeFiles/__idf_esp_driver_ledc.dir
+C:/Users/afia/source/repos/LightAsAGuide/Firmware/lightasaguide-firmware/build/esp-idf/esp_driver_ledc/CMakeFiles/edit_cache.dir
+C:/Users/afia/source/repos/LightAsAGuide/Firmware/lightasaguide-firmware/build/esp-idf/esp_driver_ledc/CMakeFiles/rebuild_cache.dir
+C:/Users/afia/source/repos/LightAsAGuide/Firmware/lightasaguide-firmware/build/esp-idf/esp_driver_ledc/CMakeFiles/list_install_components.dir
+C:/Users/afia/source/repos/LightAsAGuide/Firmware/lightasaguide-firmware/build/esp-idf/esp_driver_ledc/CMakeFiles/install.dir
+C:/Users/afia/source/repos/LightAsAGuide/Firmware/lightasaguide-firmware/build/esp-idf/esp_driver_ledc/CMakeFiles/install/local.dir
+C:/Users/afia/source/repos/LightAsAGuide/Firmware/lightasaguide-firmware/build/esp-idf/esp_driver_ledc/CMakeFiles/install/strip.dir
 C:/Users/afia/source/repos/LightAsAGuide/Firmware/lightasaguide-firmware/build/esp-idf/main/CMakeFiles/__idf_main.dir
 C:/Users/afia/source/repos/LightAsAGuide/Firmware/lightasaguide-firmware/build/esp-idf/main/CMakeFiles/edit_cache.dir
 C:/Users/afia/source/repos/LightAsAGuide/Firmware/lightasaguide-firmware/build/esp-idf/main/CMakeFiles/rebuild_cache.dir
