@@ -22,6 +22,8 @@ import com.team42.lightapp.LightSource
 import com.team42.lightapp.R
 import com.team42.lightapp.SessionBlock
 import com.team42.lightapp.SessionManager
+import com.team42.lightapp.getSession
+import com.team42.lightapp.saveSession
 
 class DebugFragment : Fragment() {
 
@@ -119,7 +121,7 @@ class DebugFragment : Fragment() {
             // Create test session
             hs!!.sectionCount = 4
 
-            val session = LightSession("Test0")
+            val session = LightSession("CDRDemo")
             val lights = mutableListOf(
                 LightSource(0.0,    0.0),
                 LightSource(100.0,  1.0),
@@ -145,7 +147,13 @@ class DebugFragment : Fragment() {
             session.blocks.add(SessionBlock(lights2, 5.0))
             session.blocks.add(SessionBlock(lightsEnd, 10.0))
 
-            hs!!.uC_SendSession(session)
+            try {
+                hs!!.uC_SendSession(session)
+            }
+            catch (err : NullPointerException)
+            {
+                Toast.makeText(context, "Device not initialized", Toast.LENGTH_SHORT).show()
+            }
         }
 
         fun printParseResult()

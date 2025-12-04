@@ -120,18 +120,19 @@ class HardwareSystem(
 
     // Functions to communicate with the microcontroller
     // All functions should wait until the state is initialized (Except uC_GetInfo)
+    // All will throw an error if the BT thread is not started
     fun uC_SendSession(session : LightSession)
     {
-        var message = "SendSession,${session.blocks.count()},${sectionCount},\n"
+        var message = "SendSession,${session.blocks.count()},${sectionCount}"
 
         for(block in session.blocks)
         {
-            message += "${block.timeStamp},"
+            message += ",\n"
+            message += "${block.timeStamp}"
             for(i in 0 until sectionCount)
             {
-                message += "${block.lights[i].brightness},${block.lights[i].frequency},"
+                message += ",${block.lights[i].brightness},${block.lights[i].frequency}"
             }
-            message += "\n"
         }
 
         btThread!!.write(message.toByteArray())
@@ -211,7 +212,9 @@ class HardwareSystem(
         // Call this from the main activity to send data to the remote device.
         fun write(bytes: ByteArray) {
             try {
-                mmOutStream.write(bytes)
+
+                // Add null terminator to byte array
+                mmOutStream.write(bytes.plus(0.toByte()))
             } catch (e: IOException) {
                 //Log.e(TAG, "Error occurred when sending data", e)
 
@@ -234,7 +237,6 @@ class HardwareSystem(
 
     // Bluetooth socket connection uses another thread (ConnectedThread class)
     // This handler operates on the main thread and interfaces with the microcontroller functions
-    //private val handler: Handler = Handler()
     private val handler = object : Handler(Looper.getMainLooper()) {
         override fun handleMessage(msg: Message) {
             when (msg.what) {
@@ -297,7 +299,7 @@ class HardwareSystem(
                         val isInput : Boolean = split[currentIndex + 1] == "Input"
                         externalModuleMap[split[currentIndex].toInt()] =
                             ExternalModule(isInput, split[currentIndex + 2], split[currentIndex + 3])
-                        currentIndex += 4;
+                        currentIndex += 4
                     }
 
                     state = HardwareState.INITIALIZED
@@ -320,12 +322,9 @@ class HardwareSystem(
                 {
                     Toast.makeText(context, "External Device with ID: ${split[1].toInt()} does not exist", Toast.LENGTH_SHORT).show()
                 }
-
-
             }
             else -> Toast.makeText(context, "Unrecognized Command: ${split[0]}", Toast.LENGTH_SHORT).show()
         }
-
     }
 
 

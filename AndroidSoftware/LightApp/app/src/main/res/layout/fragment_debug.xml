@@ -11,15 +11,31 @@
         android:orientation="vertical"
         android:gravity="center_vertical|center_horizontal"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="50dp"
         android:layout_marginEnd="8dp">
 
-        <Button
-            android:id="@+id/savebutton"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-            android:text="Save Session Test" />
+            <Button
+                android:id="@+id/savebutton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+
+                android:text="Save Session Test" />
+
+            <Button
+                android:id="@+id/btParseTest"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="200dp"
+
+                android:text="Parse Received Message Test" />
+
+        </LinearLayout>
+
 
         <Button
             android:id="@+id/getPermission"
@@ -30,25 +46,25 @@
 
         <Button
             android:id="@+id/btConnect"
-            style="?android:attr/buttonBarButtonStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
 
             android:text="Connect" />
 
-        <Button
-            android:id="@+id/btSendSession"
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent">
 
-            android:text="Send Session Test" />
+            <Button
+                android:id="@+id/btSendSession"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
 
-        <Button
-            android:id="@+id/btParseTest"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+                android:padding="100dp"
 
-            android:text="Parse Received Message Test" />
+                android:layout_gravity="center"
+                android:text="CDR Demo" />
+        </FrameLayout>
     </LinearLayout>
 
 
