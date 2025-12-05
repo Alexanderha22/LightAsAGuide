@@ -13,6 +13,7 @@
 #include "nvs_flash.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/queue.h"
 #include "esp_log.h"
 #include "esp_bt.h"
 #include "esp_bt_main.h"
@@ -86,6 +87,7 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
     case ESP_SPP_CLOSE_EVT:
         ESP_LOGI(SPP_TAG, "ESP_SPP_CLOSE_EVT status:%d handle:%"PRIu32" close_by_remote:%d", param->close.status,
                  param->close.handle, param->close.async);
+        sequenceStarted = 0;
         break;
     case ESP_SPP_START_EVT:
         if (param->start.status == ESP_SPP_SUCCESS) {
@@ -113,8 +115,21 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
         if (param->data_ind.len < 300) {
             ESP_LOGI(SPP_TAG, "Received message with length %d", param->data_ind.len);
             ESP_LOGI(SPP_TAG, "%s", (char*)param->data_ind.data);
-            esp_spp_write(param->srv_open.handle, param->data_ind.len, param->data_ind.data);
         }
+        //Translates and stored sequence
+        translate_sequence_package((unsigned char*)param->data_ind.data);
+
+        //Initialize sequence
+        init_sequence();
+
+        //Flag
+        sequenceStarted = 1;
+
+        if (s_worker_handle == NULL)
+        {
+            xTaskCreate(worker_task, "worker", 4096, NULL, tskIDLE_PRIORITY + 1, &s_worker_handle);
+        }
+
 #else
         gettimeofday(&time_new, NULL);
         data_num += param->data_ind.len;
@@ -220,7 +235,7 @@ void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param)
     return;
 }
 
-void app_main(void)
+void bluetooth_init(void)
 {
     char bda_str[18] = {0};
     esp_err_t ret = nvs_flash_init();
@@ -293,4 +308,14 @@ void app_main(void)
     esp_bt_gap_set_pin(pin_type, 0, pin_code);
 
     ESP_LOGI(SPP_TAG, "Own address:[%s]", bda2str((uint8_t *)esp_bt_dev_get_address(), bda_str, sizeof(bda_str)));
+}
+
+
+void app_main(void)
+{
+    example_ledc_init();
+    bluetooth_init();
+
+    xTaskCreate(worker_task, )
+
 }

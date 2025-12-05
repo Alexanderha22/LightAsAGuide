@@ -88,6 +88,7 @@ Sequence StoredSequence;
 int currentBlock;
 float currentTimeStamp;
 float nextTimeStamp;
+int sequenceStarted;
 int sequenceComplete;
 
 //Timer Setup
@@ -97,6 +98,33 @@ gptimer_config_t timer_config = {
     .direction = GPTIMER_COUNT_UP,      // Counting direction is up
     .resolution_hz = 1 * 1000 * 1000,   // Resolution is 1 MHz, i.e., 1 tick equals 1 microsecond
 };
+
+
+static TaskHandle_t s_worker_handle = NULL;
+static QueueHandle_t s_data_queue = NULL;
+static void worker_task(void *arg);
+
+
+static void worker_task(void *arg)
+{
+    const TickType_t delay_ticks = pdMS_TO_TICKS(10);
+
+    while (1)
+    {
+        if (sequenceStarted == 0)
+        {
+            vTaskDelay(pdMS_TO_TICKS(100));
+            continue;
+        }
+
+        while (sequenceStarted == 1)
+        {
+            run_LED_sequence();
+            vTaskDelay(pdMS_TO_TICKS(10));
+        }
+    }
+}
+
 
 
 
@@ -115,6 +143,7 @@ static void init_sequence(void)
     currentTimeStamp = 0;
     nextTimeStamp = StoredSequence.blocks[currentBlock + 1].TimeStamp;
 
+    sequenceStarted = 1;
     sequenceComplete = 0;
 
 
@@ -167,7 +196,7 @@ static void run_LED_sequence(void)
             }
             else
             {
-                sequenceComplete = 1;
+                sequenceStarted = 1;
             }
         }
 
@@ -281,7 +310,7 @@ static void example_ledc_init(void)
 }
 
 //Divide up sequencing information from Bluetooth to convert to frequency and duty cycle
-void translate_sequence_package(unsigned char sequence[])
+void translate_sequence_package(unsigned char* sequence)
 {
 
     //Check for sequence size
