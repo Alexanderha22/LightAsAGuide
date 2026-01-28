@@ -18,15 +18,18 @@
 #include "esp_bt_device.h"
 #include "esp_spp_api.h"
 
+#define SPP_TAG "SPP_ACCEPTOR"
+#define SPP_SERVER_NAME "SPP_SERVER"
+
 static const char local_device_name[] = CONFIG_EXAMPLE_LOCAL_DEVICE_NAME;
 static const esp_spp_mode_t esp_spp_mode = ESP_SPP_MODE_CB;
 static const bool esp_spp_enable_l2cap_ertm = true;
 
-static struct timeval time_new, time_old;
-static long data_num = 0;
-
 static const esp_spp_sec_t sec_mask = ESP_SPP_SEC_AUTHENTICATE;
 static const esp_spp_role_t role_slave = ESP_SPP_ROLE_SLAVE;
+
+static struct timeval time_new, time_old;
+static long data_num = 0;
 
 static char *bda2str(uint8_t * bda, char *str, size_t size);
 static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param);

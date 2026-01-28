@@ -1,16 +1,16 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
+#include "freertos/ringbuf.h"
 
 #include "time.h"
 #include "sys/time.h"
 
 #include "bluedroid_spp.h"
+#include "parse_data_task.h"
 
-#define SPP_TAG "SPP_ACCEPTOR"
-#define SPP_SERVER_NAME "SPP_SERVER"
 
-// enable or disable verbose bluetooth logging:
+// todo enable or disable verbose bluetooth logging:
 #define VERBOSE 1
 #define SIMPLE 0
 #define DEBUG_MODE VERBOSE
@@ -85,8 +85,12 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
             ESP_LOGI(SPP_TAG, "%s", (char*)param->data_ind.data);
         }
 
-        // store data in queue to be processed in a lower-priority task
-        
+        // defer processing to data handler task w/ ring buffer
+        UBaseType_t res;
+        xRingbufferSendFromISR(ring_buf_handle, param->data_ind.data, param->data_ind.len, res);
+        if (res != pdTRUE) {
+            ESP_LOGE(SPP_TAG, "Failed to send item\n");
+        }
         
     case ESP_SPP_CONG_EVT: // bluetooth stack is backed up (error)
         ESP_LOGI(SPP_TAG, "ESP_SPP_CONG_EVT");
