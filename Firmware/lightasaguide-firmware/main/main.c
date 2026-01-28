@@ -316,6 +316,5 @@ void app_main(void)
     example_ledc_init();
     bluetooth_init();
 
-    xTaskCreate(worker_task, )
-
+    xTaskCreate(worker_task, "worker", 4096, NULL, tskIDLE_PRIORITY + 1, &s_worker_handle);
 }
