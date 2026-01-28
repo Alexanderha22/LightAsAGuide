@@ -9,10 +9,18 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include "esp_mac.h"
 #include "driver/ledc.h"
 #include "esp_err.h"
+
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/queue.h"
+#include "driver/gptimer.h"
+#include "esp_log.h"
+
 
 //LED0 on GPIO16
 #define LEDC0_TIMER              LEDC_TIMER_0
@@ -49,6 +57,8 @@
 
 #define MAX_SEQUENCE_LENGTH     1000
 
+const int LED_TIMERS[] = {LEDC0_TIMER, LEDC1_TIMER, LEDC2_TIMER, LEDC3_TIMER};
+const int LED_CHANNELS[] = {LEDC0_CHANNEL, LEDC1_CHANNEL, LEDC2_CHANNEL, LEDC3_CHANNEL};
 
 
 typedef struct
@@ -75,6 +85,128 @@ typedef struct
 
 //Global variables
 Sequence StoredSequence;
+int currentBlock;
+float currentTimeStamp;
+float nextTimeStamp;
+int sequenceStarted;
+int sequenceComplete;
+
+//Timer Setup
+gptimer_handle_t gptimer = NULL;
+gptimer_config_t timer_config = {
+    .clk_src = GPTIMER_CLK_SRC_DEFAULT, // Select the default clock source
+    .direction = GPTIMER_COUNT_UP,      // Counting direction is up
+    .resolution_hz = 1 * 1000 * 1000,   // Resolution is 1 MHz, i.e., 1 tick equals 1 microsecond
+};
+
+
+static TaskHandle_t s_worker_handle = NULL;
+static QueueHandle_t s_data_queue = NULL;
+static void worker_task(void *arg);
+
+static void run_LED_sequence();
+
+
+static void worker_task(void *arg)
+{
+    const TickType_t delay_ticks = pdMS_TO_TICKS(10);
+
+    while (1)
+    {
+        if (sequenceStarted == 0)
+        {
+            vTaskDelay(pdMS_TO_TICKS(100));
+            continue;
+        }
+
+        while (sequenceStarted == 1)
+        {
+            run_LED_sequence();
+            vTaskDelay(pdMS_TO_TICKS(10));
+        }
+    }
+}
+
+
+
+
+static void init_sequence(void)
+{
+    // Create a timer instance
+    ESP_ERROR_CHECK(gptimer_new_timer(&timer_config, &gptimer));
+    // Enable the timer
+    ESP_ERROR_CHECK(gptimer_enable(gptimer));
+    // Start the timer
+    ESP_ERROR_CHECK(gptimer_start(gptimer));
+
+    //Start sequence
+    currentBlock = 0;
+
+    currentTimeStamp = 0;
+    nextTimeStamp = StoredSequence.blocks[currentBlock + 1].TimeStamp;
+
+    sequenceStarted = 1;
+    sequenceComplete = 0;
+
+
+}
+
+
+//Use stored sequence and timer to enable/disable LEDs
+void run_LED_sequence(void)
+{
+    //Check what time on timer 
+    uint32_t resolution_hz;
+    ESP_ERROR_CHECK(gptimer_get_resolution(gptimer, &resolution_hz));
+    uint64_t count;
+    ESP_ERROR_CHECK(gptimer_get_raw_count(gptimer, &count));
+    float current_time = (double)count / resolution_hz;
+
+    if (currentTimeStamp == current_time)
+    {     
+
+        printf("Current Time Stamp: %f\n", current_time);
+        printf("Block Number: %d\n", currentBlock);
+
+        currentTimeStamp = nextTimeStamp;
+
+        //Need to set LEDS
+        //Loop through all light sections
+        for (int lightNum = 0; lightNum < StoredSequence.N; lightNum++)
+        {
+            ledc_set_freq(LEDC_MODE, LED_TIMERS[lightNum], StoredSequence.blocks[currentBlock].settings[lightNum].Frequency);
+            printf("Setting light %i frequency\n", lightNum);
+
+            //Ramp LED if there is another value to go to (not on last block)
+            if (currentBlock < StoredSequence.M - 1)
+            {
+                
+                //Get time until next block
+                nextTimeStamp = StoredSequence.blocks[currentBlock + 1].TimeStamp;
+                float duration = nextTimeStamp - current_time;
+
+                //Convert to millis
+                duration = duration / 1000;
+
+                //Find duty cycle from percent provided
+                // Set duty to 50%. (2 ** 13) * 50% = 4096
+                uint32_t duty = (pow(2, 13)) * (StoredSequence.blocks[currentBlock].settings[lightNum].DutyCycle / 100);
+
+                ledc_set_fade_with_time(LEDC_MODE, LED_CHANNELS[lightNum], duty, duration);
+
+                printf("Setting light %i brightness\n", lightNum);
+            }
+            else
+            {
+                sequenceStarted = 1;
+            }
+        }
+
+
+        //Go to next block
+        currentBlock++;
+    }
+}
 
 
 
@@ -180,7 +312,7 @@ static void example_ledc_init(void)
 }
 
 //Divide up sequencing information from Bluetooth to convert to frequency and duty cycle
-void translate_sequence_package(unsigned char sequence[])
+void translate_sequence_package(unsigned char* sequence)
 {
 
     //Check for sequence size
@@ -306,6 +438,8 @@ void translate_sequence_package(unsigned char sequence[])
     }
 
 }
+
+
 
 /* example
 void app_main(void)
