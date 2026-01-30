@@ -82,11 +82,18 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
             ESP_LOGI(SPP_TAG, "%s", (char*)param->data_ind.data);
         }
 
+        const char *msg = "Data received\r\n";
+        esp_spp_write(param->srv_open.handle, strlen(msg), (uint8_t *)msg);
+
         // defer processing to data handler task w/ ring buffer
         BaseType_t res = xRingbufferSendFromISR(ring_buf_handle, param->data_ind.data, param->data_ind.len, NULL);
         if (res != pdTRUE) {
             ESP_LOGE(SPP_TAG, "Failed to send item\n");
+            msg = "Failed to send data to ring buffer\r\n";
+            esp_spp_write(param->srv_open.handle, strlen(msg), (uint8_t *)msg);
         }
+        msg = "Sent data to ring buffer successfully\r\n";
+        esp_spp_write(param->srv_open.handle, strlen(msg), (uint8_t *)msg);
         break;
         
     case ESP_SPP_CONG_EVT: // bluetooth stack is backed up (error)
