@@ -1,10 +1,13 @@
 #include "bluedroid_spp.h"
-#include "led.h"
 #include "parse_data_task.h"
 
 void app_main(void)
 {
-    example_ledc_init();
-    bluetooth_init();
-    init_data_task_handler();
+     RingbufHandle_t rb =
+        xRingbufferCreate(1024, RINGBUF_TYPE_BYTEBUF);
+    assert(rb);
+
+    xTaskCreate(parse_data_task, "parser", 4096, rb, 5, NULL);
+
+    bluetooth_init(rb);
 }
