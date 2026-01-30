@@ -3,18 +3,15 @@
 #include "freertos/queue.h"
 #include "freertos/ringbuf.h"
 
-#include "time.h"
-#include "sys/time.h"
-
 #include "bluedroid_spp.h"
-#include "parse_data_task.h"
 
 
-// todo enable or disable verbose bluetooth logging:
-#define VERBOSE 1
-#define SIMPLE 0
-#define DEBUG_MODE VERBOSE
+static struct timeval time_old;
 
+static char *bda2str(uint8_t * bda, char *str, size_t size);
+static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param);
+
+// for debug log
 static char *bda2str(uint8_t * bda, char *str, size_t size)
 {
     if (bda == NULL || str == NULL || size < 18) {
@@ -86,11 +83,11 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
         }
 
         // defer processing to data handler task w/ ring buffer
-        UBaseType_t res;
-        xRingbufferSendFromISR(ring_buf_handle, param->data_ind.data, param->data_ind.len, res);
+        BaseType_t res = xRingbufferSendFromISR(ring_buf_handle, param->data_ind.data, param->data_ind.len, NULL);
         if (res != pdTRUE) {
             ESP_LOGE(SPP_TAG, "Failed to send item\n");
         }
+        break;
         
     case ESP_SPP_CONG_EVT: // bluetooth stack is backed up (error)
         ESP_LOGI(SPP_TAG, "ESP_SPP_CONG_EVT");

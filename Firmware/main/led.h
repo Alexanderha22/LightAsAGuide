@@ -60,29 +60,6 @@
 const int LED_TIMERS[] = {LEDC0_TIMER, LEDC1_TIMER, LEDC2_TIMER, LEDC3_TIMER};
 const int LED_CHANNELS[] = {LEDC0_CHANNEL, LEDC1_CHANNEL, LEDC2_CHANNEL, LEDC3_CHANNEL};
 
-
-typedef struct
-{
-    float DutyCycle;
-    float Frequency;
-} LightSetting;
-
-typedef struct
-{
-    float TimeStamp;
-    LightSetting* settings; //Will be N number of entries for each light section
-} Block ;
-
-//Structs
-typedef struct
-{
-    char* Command;
-    int M;
-    int N;
-    Block* blocks; //Will be M number of entries for each block
-} Sequence ;
-
-
 //Global variables
 Sequence StoredSequence;
 int currentBlock;
