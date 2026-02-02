@@ -14639,6 +14639,64 @@
                 "children": [
                     {
                         "children": [],
+                        "depends_on": "SOC_GPTIMER_SUPPORTED",
+                        "help": "Place GPTimer ISR handler in IRAM to reduce latency caused by cache miss.",
+                        "id": "GPTIMER_ISR_HANDLER_IN_IRAM",
+                        "name": "GPTIMER_ISR_HANDLER_IN_IRAM",
+                        "range": null,
+                        "title": "Place GPTimer ISR handler in IRAM to reduce latency",
+                        "type": "bool"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": "SOC_GPTIMER_SUPPORTED",
+                        "help": "Place GPTimer control functions (like start/stop) in IRAM, to reduce latency caused by cache miss.\nIf enabled, these functions can also be called when cache is disabled.",
+                        "id": "GPTIMER_CTRL_FUNC_IN_IRAM",
+                        "name": "GPTIMER_CTRL_FUNC_IN_IRAM",
+                        "range": null,
+                        "title": "Place GPTimer control functions in IRAM",
+                        "type": "bool"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": "SOC_GPTIMER_SUPPORTED",
+                        "help": "Enable this option to allow the GPTimer Interrupt Service Routine (ISR)\nto execute even when the cache is disabled. This can be useful in scenarios where the cache\nmight be turned off, but the GPTimer functionality is still required to operate correctly.",
+                        "id": "GPTIMER_ISR_CACHE_SAFE",
+                        "name": "GPTIMER_ISR_CACHE_SAFE",
+                        "range": null,
+                        "title": "Allow GPTimer ISR to execute when cache is disabled",
+                        "type": "bool"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": "SOC_GPTIMER_SUPPORTED",
+                        "help": "This will ensure the GPTimer object will not be allocated from a memory region\nwhere its cache can be disabled.",
+                        "id": "GPTIMER_OBJ_CACHE_SAFE",
+                        "name": "GPTIMER_OBJ_CACHE_SAFE",
+                        "range": null,
+                        "title": null,
+                        "type": "bool"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": "SOC_GPTIMER_SUPPORTED",
+                        "help": "If enabled, GPTimer component will:\n1. ignore the global logging settings\n2. compile all log messages into the binary\n3. set the runtime log level to VERBOSE\nPlease enable this option by caution, as it will increase the binary size.",
+                        "id": "GPTIMER_ENABLE_DEBUG_LOG",
+                        "name": "GPTIMER_ENABLE_DEBUG_LOG",
+                        "range": null,
+                        "title": "Force enable debug log",
+                        "type": "bool"
+                    }
+                ],
+                "depends_on": "SOC_GPTIMER_SUPPORTED",
+                "id": "component-config-esp-driver-gptimer-configurations",
+                "title": "ESP-Driver:GPTimer Configurations",
+                "type": "menu"
+            },
+            {
+                "children": [
+                    {
+                        "children": [],
                         "depends_on": null,
                         "help": "Place LEDC control functions (ledc_update_duty and ledc_stop) into IRAM,\nso that these functions can be IRAM-safe and able to be called in an IRAM context.\nEnabling this option can improve driver performance as well.",
                         "id": "LEDC_CTRL_FUNC_IN_IRAM",

@@ -1,13 +1,13 @@
 # Target labels
  bootloader
 # Source files and their labels
-C:/Users/afia/source/repos/LightAsAGuide/Firmware/lightasaguide-firmware/build/CMakeFiles/bootloader
-C:/Users/afia/source/repos/LightAsAGuide/Firmware/lightasaguide-firmware/build/CMakeFiles/bootloader.rule
-C:/Users/afia/source/repos/LightAsAGuide/Firmware/lightasaguide-firmware/build/CMakeFiles/bootloader-complete.rule
-C:/Users/afia/source/repos/LightAsAGuide/Firmware/lightasaguide-firmware/build/bootloader-prefix/src/bootloader-stamp/bootloader-build.rule
-C:/Users/afia/source/repos/LightAsAGuide/Firmware/lightasaguide-firmware/build/bootloader-prefix/src/bootloader-stamp/bootloader-configure.rule
-C:/Users/afia/source/repos/LightAsAGuide/Firmware/lightasaguide-firmware/build/bootloader-prefix/src/bootloader-stamp/bootloader-download.rule
-C:/Users/afia/source/repos/LightAsAGuide/Firmware/lightasaguide-firmware/build/bootloader-prefix/src/bootloader-stamp/bootloader-install.rule
-C:/Users/afia/source/repos/LightAsAGuide/Firmware/lightasaguide-firmware/build/bootloader-prefix/src/bootloader-stamp/bootloader-mkdir.rule
-C:/Users/afia/source/repos/LightAsAGuide/Firmware/lightasaguide-firmware/build/bootloader-prefix/src/bootloader-stamp/bootloader-patch.rule
-C:/Users/afia/source/repos/LightAsAGuide/Firmware/lightasaguide-firmware/build/bootloader-prefix/src/bootloader-stamp/bootloader-update.rule
+C:/LightAsAGuide/Firmware/lightasaguide-firmware/build/CMakeFiles/bootloader
+C:/LightAsAGuide/Firmware/lightasaguide-firmware/build/CMakeFiles/bootloader.rule
+C:/LightAsAGuide/Firmware/lightasaguide-firmware/build/CMakeFiles/bootloader-complete.rule
+C:/LightAsAGuide/Firmware/lightasaguide-firmware/build/bootloader-prefix/src/bootloader-stamp/bootloader-build.rule
+C:/LightAsAGuide/Firmware/lightasaguide-firmware/build/bootloader-prefix/src/bootloader-stamp/bootloader-configure.rule
+C:/LightAsAGuide/Firmware/lightasaguide-firmware/build/bootloader-prefix/src/bootloader-stamp/bootloader-download.rule
+C:/LightAsAGuide/Firmware/lightasaguide-firmware/build/bootloader-prefix/src/bootloader-stamp/bootloader-install.rule
+C:/LightAsAGuide/Firmware/lightasaguide-firmware/build/bootloader-prefix/src/bootloader-stamp/bootloader-mkdir.rule
+C:/LightAsAGuide/Firmware/lightasaguide-firmware/build/bootloader-prefix/src/bootloader-stamp/bootloader-patch.rule
+C:/LightAsAGuide/Firmware/lightasaguide-firmware/build/bootloader-prefix/src/bootloader-stamp/bootloader-update.rule
