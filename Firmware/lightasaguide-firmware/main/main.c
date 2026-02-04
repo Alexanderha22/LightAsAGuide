@@ -313,8 +313,30 @@ void bluetooth_init(void)
 
 void app_main(void)
 {
-    example_ledc_init();
-    bluetooth_init();
+    init_leds();
 
-    xTaskCreate(worker_task, "worker", 4096, NULL, tskIDLE_PRIORITY + 1, &s_worker_handle);
+    //Test for LED sequencing
+    //same frequency different brightnesses
+    //unsigned char inputsequence[] = "SendSession,3,4,\n0.0,1.0,25.0,25.0,25.0,50.0,25.0,75.0,25.0,\n5.0,100.0,25.0,25.0,25.0,50.0,25.0,75.0,25.0\n10.0,1.0,25.0,25.0,25.0,50.0,25.0,75.0,25.0";
+    
+    //Same brightness different frequency
+    unsigned char inputsequence[] = "SendSession,3,4,\n0.0,50.0,2.0,50.0,4.0,50.0,8.0,50.0,16.0,\n5.0,50.0,0.0,50.0,4.0,50.0,8.0,50.0,16.0,\n10.0,50.0,2.0,50.0,4.0,50.0,8.0,50.0,16.0";
+
+
+    translate_sequence_package(inputsequence);
+
+    init_sequence();
+
+    //Runs LED sequence
+    while (sequenceComplete == 0)
+    {
+        run_LED_sequence();
+        vTaskDelay(1);
+    }
+
+
+
+    //bluetooth_init();
+
+    //xTaskCreate(worker_task, "worker", 4096, NULL, tskIDLE_PRIORITY + 1, &s_worker_handle);
 }

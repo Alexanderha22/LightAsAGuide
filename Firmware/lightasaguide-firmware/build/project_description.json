@@ -1,7 +1,7 @@
 {
     "version":            "1.2",
     "project_name":       "lightasaguide-firmware",
-    "project_version":    "2adf820-dirty",
+    "project_version":    "506da46-dirty",
     "project_path":       "C:/LightAsAGuide/Firmware/lightasaguide-firmware",
     "idf_path":           "C:/Users/lydia/esp/v5.5.1/esp-idf",
     "build_dir":          "C:/LightAsAGuide/Firmware/lightasaguide-firmware/build",

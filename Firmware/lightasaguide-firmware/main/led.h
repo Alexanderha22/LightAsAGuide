@@ -27,28 +27,28 @@
 #define LEDC0_OUTPUT_IO          (16) // Define the output GPIO
 #define LEDC0_CHANNEL            LEDC_CHANNEL_0
 #define LEDC0_DUTY               (0) // Set duty to 0%. (2 ** 13) * 50% = 4096
-#define LEDC0_FREQUENCY          (1) // Frequency in Hertz
+#define LEDC0_FREQUENCY          (10) // Frequency in Hertz
 
 //LED1 on GPIO17
 #define LEDC1_TIMER              LEDC_TIMER_1
 #define LEDC1_OUTPUT_IO          (17) // Define the output GPIO
 #define LEDC1_CHANNEL            LEDC_CHANNEL_1
 #define LEDC1_DUTY               (0) // Set duty to 0%. (2 ** 13) * 50% = 4096
-#define LEDC1_FREQUENCY          (1) // Frequency in Hertz
+#define LEDC1_FREQUENCY          (10) // Frequency in Hertz
 
 //LED2 on GPIO18
 #define LEDC2_TIMER              LEDC_TIMER_2
 #define LEDC2_OUTPUT_IO          (18) // Define the output GPIO
 #define LEDC2_CHANNEL            LEDC_CHANNEL_2
 #define LEDC2_DUTY               (0) // Set duty to 0%. (2 ** 13) * 50% = 4096
-#define LEDC2_FREQUENCY          (1) // Frequency in Hertz. Set frequency at 4 kHz
+#define LEDC2_FREQUENCY          (10) // Frequency in Hertz. Set frequency at 4 kHz
 
 //LED3 on GPIO19
 #define LEDC3_TIMER              LEDC_TIMER_3
 #define LEDC3_OUTPUT_IO          (19) // Define the output GPIO
 #define LEDC3_CHANNEL            LEDC_CHANNEL_3
 #define LEDC3_DUTY               (0) // Set duty to 0%. (2 ** 13) * 50% = 4096
-#define LEDC3_FREQUENCY          (1) // Frequency in Hertz. Set frequency at 4 kHz
+#define LEDC3_FREQUENCY          (10) // Frequency in Hertz. Set frequency at 4 kHz
 
 
 //General
@@ -58,8 +58,9 @@
 #define MAX_SEQUENCE_LENGTH     1000
 #define MAX_FREQUENCY           100
 
+const uint32_t LED_GPIO[] = {LEDC0_OUTPUT_IO, LEDC1_OUTPUT_IO, LEDC2_OUTPUT_IO, LEDC3_OUTPUT_IO};
 const ledc_timer_t LED_TIMERS[] = {LEDC0_TIMER, LEDC1_TIMER, LEDC2_TIMER, LEDC3_TIMER};
-const ledc_timer_t LED_CHANNELS[] = {LEDC0_CHANNEL, LEDC1_CHANNEL, LEDC2_CHANNEL, LEDC3_CHANNEL};
+const ledc_channel_t LED_CHANNELS[] = {LEDC0_CHANNEL, LEDC1_CHANNEL, LEDC2_CHANNEL, LEDC3_CHANNEL};
 
 //Structs to define sequence settings
 typedef struct
@@ -188,24 +189,17 @@ static void run_LED_sequence(void)
             float currDuty = StoredSequence.blocks[currentBlock].settings[lightNum].DutyCycle;
             float currFreq = StoredSequence.blocks[currentBlock].settings[lightNum].Frequency;
 
-            //Hard coded bc list not working
-            if (lightNum == 0)
-            {
-                ledc_set_freq(LEDC_MODE, LEDC0_TIMER, currFreq);
+            //Check if frequency is 0, if yes then set to solid
+            if (currFreq == 0)
+            {   
+                printf("Setting LED to solid\n");
+                ledc_set_freq(LEDC_MODE, LED_TIMERS[lightNum], 100);
             }
-            else if (lightNum == 1)
+            else
             {
-                ledc_set_freq(LEDC_MODE, LEDC1_TIMER, currFreq);
+                ledc_set_freq(LEDC_MODE, LED_TIMERS[lightNum], currFreq);
             }
-            else if (lightNum == 2)
-            {
-                ledc_set_freq(LEDC_MODE, LEDC2_TIMER, currFreq);
-            }
-            else if (lightNum == 3)
-            {
-                ledc_set_freq(LEDC_MODE, LEDC3_TIMER, currFreq);
-            }
-
+            
             printf("Setting light %i frequency\n", lightNum);
 
             //Ramp LED if there is another value to go to (not on last block)
@@ -504,3 +498,6 @@ void translate_sequence_package(unsigned char* sequence)
 
 }
 
+
+//SEQUENCE
+//unsigned char inputsequence[] = "SendSession,3,4,\n0.0,50.0,2.0,50.0,4.0,50.0,8.0,50.0,16.0,\n5.0,50.0,0.0,50.0,4.0,50.0,8.0,50.0,16.0,\n10.0,50.0,2.0,50.0,4.0,50.0,8.0,50.0,16.0";
