@@ -4,4 +4,6 @@
     <string name="title_dashboard">Dashboard</string>
     <string name="title_notifications">Notifications</string>
     <string name="title_debug">Debug</string>
+    <string name="title_playback">Playback</string>
+    <string name="status_button">OFF</string>
 </resources>

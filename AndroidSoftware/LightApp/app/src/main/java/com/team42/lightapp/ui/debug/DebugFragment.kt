@@ -3,6 +3,7 @@ package com.team42.lightapp.ui.debug
 
 import android.Manifest
 import android.app.Activity
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -33,14 +34,14 @@ class DebugFragment : Fragment() {
 
     private val viewModel: DebugViewModel by viewModels()
     private var hs : HardwareSystem? = null
+    private var context: Context = requireContext()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         // TODO: Use the ViewModel
         // Setup sessionManager
-        SessionManager.getFolder(requireContext())
-        hs = HardwareSystem(requireContext())
+        SessionManager.getFolder(context)
 
     }
 
@@ -66,10 +67,10 @@ class DebugFragment : Fragment() {
         // Get permission
         permissionButton.setOnClickListener{
             if (ActivityCompat.checkSelfPermission(
-                    requireContext(),
+                    context,
                     Manifest.permission.BLUETOOTH_SCAN
                 ) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(
-                    requireContext(),
+                    context,
                     Manifest.permission.BLUETOOTH_CONNECT
                 ) != PackageManager.PERMISSION_GRANTED
             )
@@ -94,10 +95,10 @@ class DebugFragment : Fragment() {
         // Need to check permission everywhere
         btConnectButton.setOnClickListener {
             if (ActivityCompat.checkSelfPermission(
-                    requireContext(),
+                    context,
                     Manifest.permission.BLUETOOTH_SCAN
                 ) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(
-                    requireContext(),
+                    context,
                     Manifest.permission.BLUETOOTH_CONNECT
                 ) != PackageManager.PERMISSION_GRANTED
             )
@@ -174,7 +175,7 @@ class DebugFragment : Fragment() {
                     "0,1,1," +
                     "1,1,2"
 
-            hs!!.parseTest(incomingMessage)
+            hs!!.parseTest(context, incomingMessage)
             printParseResult()
 
             incomingMessage = "SetInfo,10,2,"
@@ -183,7 +184,7 @@ class DebugFragment : Fragment() {
                 incomingMessage += "$i,$i,${i%2},"
             }
             incomingMessage += "23,Input,E Module,This is an external device"
-            hs!!.parseTest(incomingMessage)
+            hs!!.parseTest(context, incomingMessage)
             printParseResult()
 
         }

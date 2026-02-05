@@ -25,9 +25,7 @@ const val MESSAGE_WRITE: Int = 1
 const val MESSAGE_TOAST: Int = 2
 
 
-class HardwareSystem(
-    private val context: Context
-)
+object HardwareSystem
 {
     // Public Hardware Information
     var sectionCount = 0
@@ -38,7 +36,7 @@ class HardwareSystem(
     // Finds the required bluetooth connection from the list of paired devices, attempts to connect
     @RequiresApi(Build.VERSION_CODES.S)
     @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT])
-    fun connectToPairedDevice() : Boolean
+    fun connectToPairedDevice(context: Context) : Boolean
     {
         val bluetoothManager: BluetoothManager? = getSystemService(context, BluetoothManager::class.java)
 
@@ -238,7 +236,7 @@ class HardwareSystem(
     // Bluetooth socket connection uses another thread (ConnectedThread class)
     // This handler operates on the main thread and interfaces with the microcontroller functions
     private val handler = object : Handler(Looper.getMainLooper()) {
-        override fun handleMessage(msg: Message) {
+        override fun handleMessage(context: Context, msg: Message) {
             when (msg.what) {
                 MESSAGE_READ -> {
                     val readBytes = msg.obj as ByteArray
@@ -256,7 +254,7 @@ class HardwareSystem(
             }
         }
     }
-    private fun parseReceivedMessage(message : String)
+    private fun parseReceivedMessage(context: Context, message : String)
     {
         val split = message.split(",")
 
@@ -329,9 +327,9 @@ class HardwareSystem(
 
 
     // Test Function, delete later
-    fun parseTest(message: String)
+    fun parseTest(context: Context, message: String)
     {
-        parseReceivedMessage(message)
+        parseReceivedMessage(context, message)
     }
 
 }
