@@ -33,7 +33,6 @@ class DebugFragment : Fragment() {
     }
 
     private val viewModel: DebugViewModel by viewModels()
-    private var hs : HardwareSystem? = null
     private var context: Context = requireContext()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,7 +60,7 @@ class DebugFragment : Fragment() {
         // Set a click listener on the button
         saveButton.setOnClickListener {
             // Handle the button click event here
-            viewModel.saveSessionTest(hs!!)
+            viewModel.saveSessionTest(HardwareSystem)
         }
 
         // Get permission
@@ -107,7 +106,7 @@ class DebugFragment : Fragment() {
             }
             else
             {
-                if(hs!!.connectToPairedDevice())
+                if(HardwareSystem.connectToPairedDevice(context))
                 {
                     Toast.makeText(context, "Connected", Toast.LENGTH_SHORT).show()
                 }
@@ -120,7 +119,7 @@ class DebugFragment : Fragment() {
 
         btSendSessionButton.setOnClickListener{
             // Create test session
-            hs!!.sectionCount = 4
+            HardwareSystem.sectionCount = 4
 
             val session = LightSession("CDRDemo")
             val lights = mutableListOf(
@@ -149,7 +148,7 @@ class DebugFragment : Fragment() {
             session.blocks.add(SessionBlock(lightsEnd, 10.0))
 
             try {
-                hs!!.uC_SendSession(session)
+                HardwareSystem.uC_SendSession(session)
             }
             catch (err : NullPointerException)
             {
@@ -159,13 +158,13 @@ class DebugFragment : Fragment() {
 
         fun printParseResult()
         {
-            Log.d("Parse", "SectionCount: ${hs!!.sectionCount}")
-            for(info in hs!!.ledList)
+            Log.d("Parse", "SectionCount: ${HardwareSystem.sectionCount}")
+            for(info in HardwareSystem.ledList)
             {
                 Log.d("Parse", "X:${info.x} Y:${info.y} S:${info.section}")
             }
 
-            hs!!.externalModuleMap.forEach {
+            HardwareSystem.externalModuleMap.forEach {
                     eID, module -> Log.d("Parse", "EID:$eID Name:${module.name} Description:${module.description}")
             }
         }
@@ -175,7 +174,7 @@ class DebugFragment : Fragment() {
                     "0,1,1," +
                     "1,1,2"
 
-            hs!!.parseTest(context, incomingMessage)
+            HardwareSystem.parseTest(context, incomingMessage)
             printParseResult()
 
             incomingMessage = "SetInfo,10,2,"
@@ -184,7 +183,7 @@ class DebugFragment : Fragment() {
                 incomingMessage += "$i,$i,${i%2},"
             }
             incomingMessage += "23,Input,E Module,This is an external device"
-            hs!!.parseTest(context, incomingMessage)
+            HardwareSystem.parseTest(context, incomingMessage)
             printParseResult()
 
         }
@@ -194,7 +193,7 @@ class DebugFragment : Fragment() {
 
     override fun onDestroy() {
         super.onDestroy()
-        if(hs?.closeConnection() == true)
+        if(HardwareSystem.closeConnection())
         {
             Toast.makeText(context, "Disconnected", Toast.LENGTH_SHORT).show()
         }

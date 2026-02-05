@@ -170,7 +170,7 @@ object HardwareSystem
     private val sppUUID: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
 
     // Thread to handle bluetooth input / output streams
-    private inner class ConnectedThread : Thread() {
+    private class ConnectedThread : Thread() {
 
         private val mmInStream: InputStream = bluetoothSocket?.inputStream ?:
         throw NullPointerException("No bluetooth socket")
@@ -236,12 +236,12 @@ object HardwareSystem
     // Bluetooth socket connection uses another thread (ConnectedThread class)
     // This handler operates on the main thread and interfaces with the microcontroller functions
     private val handler = object : Handler(Looper.getMainLooper()) {
-        override fun handleMessage(context: Context, msg: Message) {
+        fun handleMessage(context: Context, msg: Message) {
             when (msg.what) {
                 MESSAGE_READ -> {
                     val readBytes = msg.obj as ByteArray
                     val readMessage = String(readBytes, 0, msg.arg1)
-                    parseReceivedMessage(readMessage)
+                    parseReceivedMessage(context, readMessage)
                 }
                 MESSAGE_WRITE -> {
                     // Message successfully sent
