@@ -534,6 +534,23 @@ void translate_sequence_package(unsigned char* sequence)
         }
         printf("Completed Setting Frequency\n");
     }
+    else if (strcmp("GetInfo", (char*)command) == 0)
+    {
+        //Need to send info back to APP about hard coded variables
+        //Format:
+        /*"SetInfo,m,n,
+        L1x, L1y, L1s,
+        L2x, L2y, L2s,
+        …
+        Lmx, Lmy, Lms,
+        EID, Input/Output, Name, Description"*/
+        //Where m = total number of lights
+        //n = number of controllable sections
+        //s = section light is part of
+        //X & Y = position of light relative to (0,0) at center (VERIFY)
+        
+
+    }
 
 }
 
