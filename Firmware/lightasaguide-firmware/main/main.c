@@ -317,10 +317,10 @@ void app_main(void)
 
     //Test for LED sequencing
     //same frequency different brightnesses
-    //unsigned char inputsequence[] = "SendSession,3,4,\n0.0,1.0,25.0,25.0,25.0,50.0,25.0,75.0,25.0,\n5.0,100.0,25.0,25.0,25.0,50.0,25.0,75.0,25.0\n10.0,1.0,25.0,25.0,25.0,50.0,25.0,75.0,25.0";
+    unsigned char inputsequence[] = "SendSession,3,4,\n0.0,1.0,25.0,25.0,25.0,50.0,25.0,75.0,25.0,\n2.0,100.0,25.0,25.0,25.0,50.0,25.0,75.0,25.0\n4.0,1.0,25.0,25.0,25.0,50.0,25.0,75.0,25.0";
     
     //Same brightness different frequency
-    unsigned char inputsequence[] = "SendSession,3,4,\n0.0,50.0,2.0,50.0,4.0,50.0,8.0,50.0,16.0,\n5.0,50.0,0.0,50.0,4.0,50.0,8.0,50.0,16.0,\n10.0,50.0,2.0,50.0,4.0,50.0,8.0,50.0,16.0";
+    //unsigned char inputsequence[] = "SendSession,3,4,\n0.0,50.0,2.0,50.0,4.0,50.0,8.0,50.0,16.0,\n2.0,50.0,0.0,50.0,4.0,50.0,8.0,50.0,16.0,\n4.0,50.0,2.0,50.0,4.0,50.0,8.0,50.0,16.0";
 
 
     translate_sequence_package(inputsequence);
@@ -334,6 +334,23 @@ void app_main(void)
         vTaskDelay(1);
     }
 
+    printf("Finished Preloaded Sequence\n");
+
+    unsigned char inputsequence1[] = "SetSection,0,1,0";
+
+    translate_sequence_package(inputsequence1);
+
+    unsigned char inputsequence2[] = "SetSection,1,1,0";
+
+    translate_sequence_package(inputsequence2);
+
+    unsigned char inputsequence3[] = "SetSection,2,1,0";
+
+    translate_sequence_package(inputsequence3);
+
+    unsigned char inputsequence4[] = "SetSection,3,1,0";
+
+    translate_sequence_package(inputsequence4);
 
 
     //bluetooth_init();

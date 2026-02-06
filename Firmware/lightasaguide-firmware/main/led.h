@@ -493,7 +493,46 @@ void translate_sequence_package(unsigned char* sequence)
         char SequenceString[strlen((char*)sequence) + 1];
         strcpy(SequenceString, (char*)sequence);
 
-        
+        //Goes to command
+        char* strPtr = strtok(SequenceString, ",");
+
+        //Stores command
+        StoredSequence.Command = malloc(strlen(strPtr) + 1);
+        strcpy(StoredSequence.Command, strPtr);
+
+        //Next goes to light number
+        strPtr = strtok(NULL, ",");
+        int lightNum = atoi(strPtr);
+
+        //Next goes to brightness
+        strPtr = strtok(NULL, ",");
+        float givenDuty = atoi(strPtr);
+
+        //Set duty
+        printf("Setting Brightness\n");
+        uint32_t duty = (pow(2, 13)) * (givenDuty / 100);
+        ledc_set_duty(LEDC_MODE, LED_CHANNELS[lightNum], duty);
+        ledc_update_duty(LEDC_MODE, LED_CHANNELS[lightNum]);
+        printf("Comlpeted Brightness Setting\n");
+
+
+
+        //Next goes to frequency
+        strPtr = strtok(NULL, ",");
+        float frequency = atoi(strPtr);
+
+        //Set frequency
+        printf("Setting frequency\n");
+        if (frequency == 0)
+        {   
+            printf("Setting LED to solid\n");
+            ledc_set_freq(LEDC_MODE, LED_TIMERS[lightNum], 100);
+        }
+        else
+        {
+            ledc_set_freq(LEDC_MODE, LED_TIMERS[lightNum], frequency);
+        }
+        printf("Completed Setting Frequency\n");
     }
 
 }
