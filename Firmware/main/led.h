@@ -26,29 +26,29 @@
 #define LEDC0_TIMER              LEDC_TIMER_0
 #define LEDC0_OUTPUT_IO          (16) // Define the output GPIO
 #define LEDC0_CHANNEL            LEDC_CHANNEL_0
-#define LEDC0_DUTY               (4096) // Set duty to 50%. (2 ** 13) * 50% = 4096
+#define LEDC0_DUTY               (0) // Set duty to 0%. (2 ** 13) * 50% = 4096
 #define LEDC0_FREQUENCY          (10) // Frequency in Hertz
 
 //LED1 on GPIO17
 #define LEDC1_TIMER              LEDC_TIMER_1
 #define LEDC1_OUTPUT_IO          (17) // Define the output GPIO
 #define LEDC1_CHANNEL            LEDC_CHANNEL_1
-#define LEDC1_DUTY               (4096) // Set duty to 50%. (2 ** 13) * 50% = 4096
-#define LEDC1_FREQUENCY          (40) // Frequency in Hertz
+#define LEDC1_DUTY               (0) // Set duty to 0%. (2 ** 13) * 50% = 4096
+#define LEDC1_FREQUENCY          (10) // Frequency in Hertz
 
 //LED2 on GPIO18
 #define LEDC2_TIMER              LEDC_TIMER_2
 #define LEDC2_OUTPUT_IO          (18) // Define the output GPIO
 #define LEDC2_CHANNEL            LEDC_CHANNEL_2
-#define LEDC2_DUTY               (819) // Set duty to 10%. (2 ** 13) * 50% = 4096
+#define LEDC2_DUTY               (0) // Set duty to 0%. (2 ** 13) * 50% = 4096
 #define LEDC2_FREQUENCY          (10) // Frequency in Hertz. Set frequency at 4 kHz
 
 //LED3 on GPIO19
 #define LEDC3_TIMER              LEDC_TIMER_3
 #define LEDC3_OUTPUT_IO          (19) // Define the output GPIO
 #define LEDC3_CHANNEL            LEDC_CHANNEL_3
-#define LEDC3_DUTY               (819) // Set duty to 50%. (2 ** 13) * 50% = 4096
-#define LEDC3_FREQUENCY          (40) // Frequency in Hertz. Set frequency at 4 kHz
+#define LEDC3_DUTY               (0) // Set duty to 0%. (2 ** 13) * 50% = 4096
+#define LEDC3_FREQUENCY          (10) // Frequency in Hertz. Set frequency at 4 kHz
 
 
 //General
@@ -56,10 +56,13 @@
 #define LEDC_DUTY_RES           LEDC_TIMER_13_BIT // Set duty resolution to 13 bits
 
 #define MAX_SEQUENCE_LENGTH     1000
+#define MAX_FREQUENCY           100
 
-const int LED_TIMERS[] = {LEDC0_TIMER, LEDC1_TIMER, LEDC2_TIMER, LEDC3_TIMER};
-const int LED_CHANNELS[] = {LEDC0_CHANNEL, LEDC1_CHANNEL, LEDC2_CHANNEL, LEDC3_CHANNEL};
+const uint32_t LED_GPIO[] = {LEDC0_OUTPUT_IO, LEDC1_OUTPUT_IO, LEDC2_OUTPUT_IO, LEDC3_OUTPUT_IO};
+const ledc_timer_t LED_TIMERS[] = {LEDC0_TIMER, LEDC1_TIMER, LEDC2_TIMER, LEDC3_TIMER};
+const ledc_channel_t LED_CHANNELS[] = {LEDC0_CHANNEL, LEDC1_CHANNEL, LEDC2_CHANNEL, LEDC3_CHANNEL};
 
+//Structs to define sequence settings
 typedef struct
 {
     float DutyCycle;
@@ -69,7 +72,7 @@ typedef struct
 typedef struct
 {
     float TimeStamp;
-    LightSetting* settings; // Will be N number of entries for each light section
+    LightSetting* settings; //Will be N number of entries for each light section
 } Block ;
 
 typedef struct
@@ -79,6 +82,7 @@ typedef struct
     int N;
     Block* blocks; //Will be M number of entries for each block
 } Sequence ;
+
 
 //Global variables
 Sequence StoredSequence;
@@ -96,12 +100,12 @@ gptimer_config_t timer_config = {
     .resolution_hz = 1 * 1000 * 1000,   // Resolution is 1 MHz, i.e., 1 tick equals 1 microsecond
 };
 
+static void run_LED_sequence(void);
+
 
 static TaskHandle_t s_worker_handle = NULL;
 static QueueHandle_t s_data_queue = NULL;
 static void worker_task(void *arg);
-
-static void run_LED_sequence();
 
 
 static void worker_task(void *arg)
@@ -150,8 +154,9 @@ static void init_sequence(void)
 
 
 //Use stored sequence and timer to enable/disable LEDs
-void run_LED_sequence(void)
+static void run_LED_sequence(void)
 {
+
     //Check what time on timer 
     uint32_t resolution_hz;
     ESP_ERROR_CHECK(gptimer_get_resolution(gptimer, &resolution_hz));
@@ -159,48 +164,94 @@ void run_LED_sequence(void)
     ESP_ERROR_CHECK(gptimer_get_raw_count(gptimer, &count));
     float current_time = (double)count / resolution_hz;
 
-    if (currentTimeStamp == current_time)
+    printf("Current Time: %f\n", current_time);
+
+    if (currentTimeStamp <= current_time)
     {     
 
-        printf("Current Time Stamp: %f\n", current_time);
-        printf("Block Number: %d\n", currentBlock);
-
-        currentTimeStamp = nextTimeStamp;
+        printf("Current Time Stamp: %f\n", currentTimeStamp);
+        printf("On Block Number: %d\n", currentBlock);
+        printf("Going to next Time Stamp %f\n", nextTimeStamp);
 
         //Need to set LEDS
         //Loop through all light sections
         for (int lightNum = 0; lightNum < StoredSequence.N; lightNum++)
         {
-            ledc_set_freq(LEDC_MODE, LED_TIMERS[lightNum], StoredSequence.blocks[currentBlock].settings[lightNum].Frequency);
+            printf("Starting light frequencies\n");
+
+            printf("lightNum: %i\n", lightNum);
+
+            printf("total number of lights (N): %i\n", StoredSequence.N);
+
+            printf("Setting to brightness: %f\n", StoredSequence.blocks[currentBlock].settings[lightNum].DutyCycle);
+            printf("Setting to frequency: %f\n", StoredSequence.blocks[currentBlock].settings[lightNum].Frequency);
+
+            float currDuty = StoredSequence.blocks[currentBlock].settings[lightNum].DutyCycle;
+            float currFreq = StoredSequence.blocks[currentBlock].settings[lightNum].Frequency;
+
+            //Check if frequency is 0, if yes then set to solid
+            if (currFreq == 0)
+            {   
+                printf("Setting LED to solid\n");
+                ledc_set_freq(LEDC_MODE, LED_TIMERS[lightNum], 100);
+            }
+            else
+            {
+                ledc_set_freq(LEDC_MODE, LED_TIMERS[lightNum], currFreq);
+            }
+            
             printf("Setting light %i frequency\n", lightNum);
 
             //Ramp LED if there is another value to go to (not on last block)
             if (currentBlock < StoredSequence.M - 1)
             {
-                
-                //Get time until next block
+
+                //Get next time stamp for future use
                 nextTimeStamp = StoredSequence.blocks[currentBlock + 1].TimeStamp;
-                float duration = nextTimeStamp - current_time;
 
-                //Convert to millis
-                duration = duration / 1000;
+                float nextDuty = StoredSequence.blocks[currentBlock + 1].settings[lightNum].DutyCycle;
 
-                //Find duty cycle from percent provided
-                // Set duty to 50%. (2 ** 13) * 50% = 4096
-                uint32_t duty = (pow(2, 13)) * (StoredSequence.blocks[currentBlock].settings[lightNum].DutyCycle / 100);
+                //Need to just set duty cycle first (no change / fade)
+                uint32_t duty = (pow(2, 13)) * (currDuty / 100);
+                ledc_set_duty(LEDC_MODE, LED_CHANNELS[lightNum], duty);
+                ledc_update_duty(LEDC_MODE, LED_CHANNELS[lightNum]);
+                
+                //Check if need to fade (change in brightness between sections)
+                if (currDuty != nextDuty)
+                {
+                    //Start fade to ramp to next brightness
+                    float nextTime = StoredSequence.blocks[currentBlock + 1].TimeStamp;
+                    float duration = nextTime - current_time;
 
-                ledc_set_fade_with_time(LEDC_MODE, LED_CHANNELS[lightNum], duty, duration);
+                    //Convert to millis
+                    duration = duration * 1000;
+
+                    //Find duty cycle from percent provided
+                    //Equation example: Set duty to 50%: (2 ** 13) * 50% = 4096
+                    uint32_t duty = (pow(2, 13)) * (nextDuty / 100);
+
+                    //Starts fade
+                    ledc_set_fade_with_time(LEDC_MODE, LED_CHANNELS[lightNum], duty, duration);
+                    ledc_fade_start(LEDC_MODE, LED_CHANNELS[lightNum], LEDC_FADE_NO_WAIT);
+                }
 
                 printf("Setting light %i brightness\n", lightNum);
             }
             else
             {
-                sequenceStarted = 1;
+                //On last block
+                sequenceComplete = 1;
+
+                //Set current duty cycle
+                uint32_t duty = (pow(2, 13)) * (currDuty / 100);
+                ledc_set_duty(LEDC_MODE, LED_CHANNELS[lightNum], duty);
+                ledc_update_duty(LEDC_MODE, LED_CHANNELS[lightNum]);
             }
         }
 
 
         //Go to next block
+        currentTimeStamp = nextTimeStamp;
         currentBlock++;
     }
 }
@@ -213,7 +264,7 @@ void run_LED_sequence(void)
  * 100% duty cycle is not reachable (duty cannot be set to (2 ** SOC_LEDC_TIMER_BIT_WIDTH)).
  */
 
-static void example_ledc_init(void)
+static void init_leds(void)
 {
     // LED0
     // Prepare and then apply the LEDC PWM timer configuration
@@ -306,6 +357,9 @@ static void example_ledc_init(void)
         .hpoint         = 0
     };
     ESP_ERROR_CHECK(ledc_channel_config(&ledc3_channel));
+
+    //Setup for fade
+    ledc_fade_func_install(0);
 }
 
 //Divide up sequencing information from Bluetooth to convert to frequency and duty cycle
@@ -433,30 +487,73 @@ void translate_sequence_package(unsigned char* sequence)
         }
 
     }
+    else if (strcmp("SetSection", (char*)command) == 0)
+    {
+        //Convert command to c-style string
+        char SequenceString[strlen((char*)sequence) + 1];
+        strcpy(SequenceString, (char*)sequence);
+
+        //Goes to command
+        char* strPtr = strtok(SequenceString, ",");
+
+        //Stores command
+        StoredSequence.Command = malloc(strlen(strPtr) + 1);
+        strcpy(StoredSequence.Command, strPtr);
+
+        //Next goes to light number
+        strPtr = strtok(NULL, ",");
+        int lightNum = atoi(strPtr);
+
+        //Next goes to brightness
+        strPtr = strtok(NULL, ",");
+        float givenDuty = atoi(strPtr);
+
+        //Set duty
+        printf("Setting Brightness\n");
+        uint32_t duty = (pow(2, 13)) * (givenDuty / 100);
+        ledc_set_duty(LEDC_MODE, LED_CHANNELS[lightNum], duty);
+        ledc_update_duty(LEDC_MODE, LED_CHANNELS[lightNum]);
+        printf("Comlpeted Brightness Setting\n");
+
+
+
+        //Next goes to frequency
+        strPtr = strtok(NULL, ",");
+        float frequency = atoi(strPtr);
+
+        //Set frequency
+        printf("Setting frequency\n");
+        if (frequency == 0)
+        {   
+            printf("Setting LED to solid\n");
+            ledc_set_freq(LEDC_MODE, LED_TIMERS[lightNum], 100);
+        }
+        else
+        {
+            ledc_set_freq(LEDC_MODE, LED_TIMERS[lightNum], frequency);
+        }
+        printf("Completed Setting Frequency\n");
+    }
+    else if (strcmp("GetInfo", (char*)command) == 0)
+    {
+        //Need to send info back to APP about hard coded variables
+        //Format:
+        /*"SetInfo,m,n,
+        L1x, L1y, L1s,
+        L2x, L2y, L2s,
+        …
+        Lmx, Lmy, Lms,
+        EID, Input/Output, Name, Description"*/
+        //Where m = total number of lights
+        //n = number of controllable sections
+        //s = section light is part of
+        //X & Y = position of light relative to (0,0) at center (VERIFY)
+        
+
+    }
 
 }
 
 
-
-/* example
-void app_main(void)
-{
-    // Set the LEDC peripheral configuration
-    example_ledc_init();
-
-    // Set duty cycle
-    ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC0_CHANNEL, LEDC0_DUTY));
-    ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC1_CHANNEL, LEDC1_DUTY));
-    ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC2_CHANNEL, LEDC2_DUTY));
-    ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC3_CHANNEL, LEDC3_DUTY));
-
-    // Update duty to apply the new value
-    ESP_ERROR_CHECK(ledc_update_duty(LEDC_MODE, LEDC1_CHANNEL));
-    ESP_ERROR_CHECK(ledc_update_duty(LEDC_MODE, LEDC1_CHANNEL));
-    ESP_ERROR_CHECK(ledc_update_duty(LEDC_MODE, LEDC1_CHANNEL));
-    ESP_ERROR_CHECK(ledc_update_duty(LEDC_MODE, LEDC1_CHANNEL));
-
-    
-
-}
-    */
+//SEQUENCE
+//unsigned char inputsequence[] = "SendSession,3,4,\n0.0,50.0,2.0,50.0,4.0,50.0,8.0,50.0,16.0,\n5.0,50.0,0.0,50.0,4.0,50.0,8.0,50.0,16.0,\n10.0,50.0,2.0,50.0,4.0,50.0,8.0,50.0,16.0";
