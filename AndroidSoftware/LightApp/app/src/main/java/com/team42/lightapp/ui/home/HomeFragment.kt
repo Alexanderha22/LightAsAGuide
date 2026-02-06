@@ -1,12 +1,19 @@
 package com.team42.lightapp.ui.home
 
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
+import android.widget.Button
+import android.widget.EditText
+import android.widget.SeekBar
+import android.widget.Switch
+import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import com.team42.lightapp.HardwareSystem
 import com.team42.lightapp.databinding.FragmentHomeBinding
 
 class HomeFragment : Fragment() {
@@ -28,10 +35,77 @@ class HomeFragment : Fragment() {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        val textView: TextView = binding.textHome
-        homeViewModel.text.observe(viewLifecycleOwner) {
-            textView.text = it
-        }
+        //val textView: TextView = binding.textHome
+        //homeViewModel.text.observe(viewLifecycleOwner) {
+        //    textView.text = it
+        //}
+
+        val switch: Switch = binding.homeSwitchStatus
+        switch.isChecked
+
+        //BRIGHTNESS
+        val brightnessNum: EditText = binding.homeEditBrightness
+        val brightnessSeek: SeekBar = binding.homeBrightnessSeek
+
+        //Change number when brightness bar changes
+        brightnessSeek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(bar: SeekBar?, progress: Int, fromUser: Boolean) {
+                brightnessNum.setText(progress.toString())
+            }
+
+            //Unused
+            override fun onStartTrackingTouch(bar: SeekBar?) { return }
+            override fun onStopTrackingTouch(bar: SeekBar?) { return }
+        })
+
+        //Change brightness bar when number changes
+        brightnessNum.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(editable: Editable?) {;
+                val n: Int = try {
+                    editable.toString().toInt();
+                } catch(e : NumberFormatException) {
+                    brightnessSeek.progress
+                }
+
+                brightnessSeek.setProgress(n, true)
+            }
+
+            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) { return }
+            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) { return }
+        })
+
+
+        //FREQUENCY
+        val frequencyNum: EditText = binding.homeEditFrequency
+        val frequencySeek: SeekBar = binding.homeFrequencySeek
+
+        //Change number when brightness bar changes
+        frequencySeek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(bar: SeekBar?, progress: Int, fromUser: Boolean) {
+                frequencyNum.setText(progress.toString())
+            }
+
+            //Unused
+            override fun onStartTrackingTouch(bar: SeekBar?) { return }
+            override fun onStopTrackingTouch(bar: SeekBar?) { return }
+        })
+
+        //Change brightness bar when number changes
+        frequencyNum.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(editable: Editable?) {
+                val n: Int = try {
+                    editable.toString().toInt()
+                } catch(e : NumberFormatException) {
+                    frequencySeek.progress
+                }
+
+                frequencySeek.setProgress(n, true)
+            }
+
+            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) { return }
+            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) { return }
+        })
+
         return root
     }
 

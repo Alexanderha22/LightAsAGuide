@@ -1,13 +1,13 @@
-package com.team42.lightapp.ui.home
+package com.team42.lightapp.ui.playback
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 
-class HomeViewModel : ViewModel() {
+class PlaybackViewModel : ViewModel() {
 
     private val _text = MutableLiveData<String>().apply {
-        value = "This"
+        value = "This is playback Fragment"
     }
     val text: LiveData<String> = _text
 }
