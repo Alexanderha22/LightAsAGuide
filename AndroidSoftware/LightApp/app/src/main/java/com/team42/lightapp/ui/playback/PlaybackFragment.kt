@@ -1,4 +1,4 @@
-package com.team42.lightapp.ui.notifications
+package com.team42.lightapp.ui.playback
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -7,11 +7,11 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import com.team42.lightapp.databinding.FragmentNotificationsBinding
+import com.team42.lightapp.databinding.FragmentPlaybackBinding
 
-class NotificationsFragment : Fragment() {
+class PlaybackFragment : Fragment() {
 
-    private var _binding: FragmentNotificationsBinding? = null
+    private var _binding: FragmentPlaybackBinding? = null
 
     // This property is only valid between onCreateView and
     // onDestroyView.
@@ -22,16 +22,16 @@ class NotificationsFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val notificationsViewModel =
-            ViewModelProvider(this).get(NotificationsViewModel::class.java)
+        val playbackViewModel =
+            ViewModelProvider(this).get(PlaybackViewModel::class.java)
 
-        _binding = FragmentNotificationsBinding.inflate(inflater, container, false)
+        _binding = FragmentPlaybackBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        val textView: TextView = binding.textNotifications
-        notificationsViewModel.text.observe(viewLifecycleOwner) {
-            textView.text = it
-        }
+        //val textView: TextView = binding.textHome
+        //playbackViewModel.text.observe(viewLifecycleOwner) {
+        //    textView.text = it
+        //}
         return root
     }
 

@@ -27,7 +27,7 @@ class MainActivity : AppCompatActivity() {
         // Set third button to debug fragment
         val appBarConfiguration = AppBarConfiguration(
             setOf(
-                R.id.navigation_home, R.id.navigation_dashboard, R.id.navigation_notifications, R.id.navigation_debug
+                R.id.navigation_home, R.id.navigation_playback, R.id.navigation_dashboard, R.id.navigation_debug
             )
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
