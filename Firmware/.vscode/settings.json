@@ -3,7 +3,8 @@
   "idf.espIdfPathWin": "C:/Espressif/frameworks/esp-idf-v5.5.1/",
   "idf.pythonInstallPath": "C:\\Espressif\\tools\\idf-python\\3.11.2\\python.exe",
   "idf.openOcdConfigs": [
-    "esp32_devkitj_v1.cfg"
+    "interface/ftdi/esp32_devkitj_v1.cfg",
+    "target/esp32.cfg"
   ],
   "idf.portWin": "COM3",
   "idf.toolsPathWin": "C:\\Espressif",
@@ -17,5 +18,5 @@
     "--compile-commands-dir=${workspaceFolder}\\build"
   ],
   "idf.flashType": "UART",
-  "idf.currentSetup": "C:/Espressif/frameworks/esp-idf-v5.5.1/"
+  "idf.currentSetup": "C:\\Users\\lydia\\esp\\v5.5.1\\esp-idf"
 }

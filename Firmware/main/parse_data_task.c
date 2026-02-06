@@ -27,10 +27,11 @@ void parse_data_task(void *arg) {
 
     while(1) {
         size_t size;
-        char *data = (char *)xRingbufferReceive(rb, &size, block_time);
+        unsigned char *data = (unsigned char *)xRingbufferReceive(rb, &size, block_time);
         
         if(data) {
             // parse
+            /*
             ESP_LOGI(PARSE_TAG, "Chunk %d bytes", size);
             ESP_LOG_BUFFER_HEX(PARSE_TAG, data, size);
 
@@ -47,6 +48,9 @@ void parse_data_task(void *arg) {
                     cmd_buf[idx++] = c;
                 }
             }
+            */
+
+            translate_sequence_package(data);
 
             // send command to appropriate task
             // translate led
