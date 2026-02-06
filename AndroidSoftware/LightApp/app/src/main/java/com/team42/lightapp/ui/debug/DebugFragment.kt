@@ -188,6 +188,18 @@ class DebugFragment : Fragment() {
 
         }
 
+        rootView.findViewById<Button>(R.id.btSetSingle).setOnClickListener{
+            try {
+                val ls : LightSource = LightSource(50.0, 10.0)
+                hs!!.uC_SetSection(3,ls)
+            }
+            catch (err : NullPointerException)
+            {
+                Toast.makeText(context, "Device not initialized", Toast.LENGTH_SHORT).show()
+            }
+
+        }
+
         return rootView
     }
 
