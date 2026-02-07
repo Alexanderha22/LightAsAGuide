@@ -120,6 +120,8 @@ void init_leds(void);
 //Divide up sequencing information from Bluetooth to convert to frequency and duty cycle
 void translate_sequence_package(unsigned char* sequence);
 
+void turn_off_leds(void);
+
 #endif
 
 

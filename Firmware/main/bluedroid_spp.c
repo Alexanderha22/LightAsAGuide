@@ -23,6 +23,8 @@
 
 #include "parse_data_task.h"
 
+#include "led.h"
+
 #include "time.h"
 #include "sys/time.h"
 
@@ -234,6 +236,8 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
         ESP_LOGI(SPP_TAG, "ESP_SPP_CLOSE_EVT status:%d handle:%"PRIu32" close_by_remote:%d", param->close.status,
                  param->close.handle, param->close.async);\
         // if commands are in progress (queue is not empty) prepare for reconnection
+
+            turn_off_leds();
 
         // else back to idle state
 

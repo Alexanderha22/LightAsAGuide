@@ -383,35 +383,34 @@ void translate_sequence_package(unsigned char* sequence)
         strPtr = strtok(NULL, ",");
         int lightNum = atoi(strPtr);
 
+        printf("Setting section number %i\n", lightNum);
+
         //Next goes to brightness
         strPtr = strtok(NULL, ",");
         float givenDuty = atoi(strPtr);
 
         //Set duty
-        printf("Setting Brightness\n");
+        
         uint32_t duty = (pow(2, 13)) * (givenDuty / 100);
         ledc_set_duty(LEDC_MODE, LED_CHANNELS[lightNum], duty);
         ledc_update_duty(LEDC_MODE, LED_CHANNELS[lightNum]);
-        printf("Comlpeted Brightness Setting\n");
-
-
+        printf("Setting Brightness to %f\n", givenDuty);
 
         //Next goes to frequency
         strPtr = strtok(NULL, ",");
         float frequency = atoi(strPtr);
 
         //Set frequency
-        printf("Setting frequency\n");
         if (frequency == 0)
         {   
-            printf("Setting LED to solid\n");
+            printf("Setting LED to solid (0 frequency)\n");
             ledc_set_freq(LEDC_MODE, LED_TIMERS[lightNum], 100);
         }
         else
         {
+            printf("Setting frequency to %f\n", frequency);
             ledc_set_freq(LEDC_MODE, LED_TIMERS[lightNum], frequency);
         }
-        printf("Completed Setting Frequency\n");
     }
     else if (strcmp("GetInfo", (char*)command) == 0)
     {
@@ -431,4 +430,14 @@ void translate_sequence_package(unsigned char* sequence)
 
     }
 
+}
+
+void turn_off_leds(void)
+{
+    //Turn off all LEDs to start
+    for (int i = 0; i < 4; i++)
+    {
+        ledc_set_duty(LEDC_MODE, LED_CHANNELS[i], 0);
+        ledc_update_duty(LEDC_MODE, LED_CHANNELS[i]);
+    }
 }
