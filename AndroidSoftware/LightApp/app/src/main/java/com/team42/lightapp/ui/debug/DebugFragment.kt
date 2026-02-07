@@ -33,14 +33,13 @@ class DebugFragment : Fragment() {
     }
 
     private val viewModel: DebugViewModel by viewModels()
-    private var context: Context = requireContext()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         // TODO: Use the ViewModel
         // Setup sessionManager
-        SessionManager.getFolder(context)
+        SessionManager.getFolder(requireContext())
 
     }
 
@@ -66,17 +65,17 @@ class DebugFragment : Fragment() {
         // Get permission
         permissionButton.setOnClickListener{
             if (ActivityCompat.checkSelfPermission(
-                    context,
+                    requireContext(),
                     Manifest.permission.BLUETOOTH_SCAN
                 ) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(
-                    context,
+                    requireContext(),
                     Manifest.permission.BLUETOOTH_CONNECT
                 ) != PackageManager.PERMISSION_GRANTED
             )
             {
                 // Request
                 ActivityCompat.requestPermissions(
-                    context as Activity,
+                    requireContext() as Activity,
                     arrayOf(
                         Manifest.permission.BLUETOOTH_SCAN,
                         Manifest.permission.BLUETOOTH_CONNECT,
@@ -87,17 +86,17 @@ class DebugFragment : Fragment() {
             }
             else
             {
-                Toast.makeText(context, "Permissions already Granted", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Permissions already Granted", Toast.LENGTH_SHORT).show()
             }
         }
 
         // Need to check permission everywhere
         btConnectButton.setOnClickListener {
             if (ActivityCompat.checkSelfPermission(
-                    context,
+                    requireContext(),
                     Manifest.permission.BLUETOOTH_SCAN
                 ) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(
-                    context,
+                    requireContext(),
                     Manifest.permission.BLUETOOTH_CONNECT
                 ) != PackageManager.PERMISSION_GRANTED
             )
@@ -106,13 +105,13 @@ class DebugFragment : Fragment() {
             }
             else
             {
-                if(HardwareSystem.connectToPairedDevice(context))
+                if(HardwareSystem.connectToPairedDevice(requireContext()))
                 {
-                    Toast.makeText(context, "Connected", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Connected", Toast.LENGTH_SHORT).show()
                 }
                 else
                 {
-                    Toast.makeText(context, "Failed to connect", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Failed to connect", Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -152,10 +151,17 @@ class DebugFragment : Fragment() {
             }
             catch (err : NullPointerException)
             {
-                Toast.makeText(context, "Device not initialized", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Device not initialized", Toast.LENGTH_SHORT).show()
             }
         }
 
+
+        rootView.findViewById<Button>(R.id.btDisconnect).setOnClickListener{
+            if(HardwareSystem.closeConnection())
+            {
+                Toast.makeText(requireContext(), "Disconnected", Toast.LENGTH_SHORT).show()
+            }
+        }
         fun printParseResult()
         {
             Log.d("Parse", "SectionCount: ${HardwareSystem.sectionCount}")
@@ -174,7 +180,7 @@ class DebugFragment : Fragment() {
                     "0,1,1," +
                     "1,1,2"
 
-            HardwareSystem.parseTest(context, incomingMessage)
+            HardwareSystem.parseTest(requireContext(), incomingMessage)
             printParseResult()
 
             incomingMessage = "SetInfo,10,2,"
@@ -183,8 +189,20 @@ class DebugFragment : Fragment() {
                 incomingMessage += "$i,$i,${i%2},"
             }
             incomingMessage += "23,Input,E Module,This is an external device"
-            HardwareSystem.parseTest(context, incomingMessage)
+            HardwareSystem.parseTest(requireContext(), incomingMessage)
             printParseResult()
+
+        }
+
+        rootView.findViewById<Button>(R.id.btSetSingle).setOnClickListener{
+            try {
+                val ls : LightSource = LightSource(50.0, 10.0)
+                HardwareSystem.uC_SetSection(3,ls)
+            }
+            catch (err : NullPointerException)
+            {
+                Toast.makeText(requireContext(), "Device not initialized", Toast.LENGTH_SHORT).show()
+            }
 
         }
 
@@ -193,9 +211,5 @@ class DebugFragment : Fragment() {
 
     override fun onDestroy() {
         super.onDestroy()
-        if(HardwareSystem.closeConnection())
-        {
-            Toast.makeText(context, "Disconnected", Toast.LENGTH_SHORT).show()
-        }
     }
 }

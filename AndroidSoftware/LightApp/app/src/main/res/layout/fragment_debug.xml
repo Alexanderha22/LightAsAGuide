@@ -51,20 +51,31 @@
 
             android:text="Connect" />
 
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
+        <Button
+            android:id="@+id/btSendSession"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
 
-            <Button
-                android:id="@+id/btSendSession"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+            android:layout_gravity="center"
 
-                android:padding="100dp"
+            android:text="CDR Demo" />
 
-                android:layout_gravity="center"
-                android:text="CDR Demo" />
-        </FrameLayout>
+        <Button
+            android:id="@+id/btSetSingle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:layout_gravity="center"
+
+            android:text="Set Light 3" />
+        <Button
+            android:id="@+id/btDisconnect"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:layout_gravity="center"
+
+            android:text="Disconnect" />
     </LinearLayout>
 
 

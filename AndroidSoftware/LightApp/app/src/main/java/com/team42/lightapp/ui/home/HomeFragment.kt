@@ -16,6 +16,9 @@ import androidx.lifecycle.ViewModelProvider
 import com.team42.lightapp.HardwareSystem
 import com.team42.lightapp.databinding.FragmentHomeBinding
 
+import com.team42.lightapp.LightSource
+import android.widget.Toast
+
 class HomeFragment : Fragment() {
 
     private var _binding: FragmentHomeBinding? = null
@@ -29,6 +32,24 @@ class HomeFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+
+
+        var LED0B : Double = 0.0
+        var LED0F : Double = 0.0
+
+        fun Send()
+        {
+            try {
+                val ls : LightSource = LightSource(LED0B, LED0F)
+                HardwareSystem.uC_SetSection(0, ls)
+            }
+            catch (err : NullPointerException)
+            {
+                Toast.makeText(requireContext(), "Device not initialized", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+
         val homeViewModel =
             ViewModelProvider(this).get(HomeViewModel::class.java)
 
@@ -51,11 +72,14 @@ class HomeFragment : Fragment() {
         brightnessSeek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(bar: SeekBar?, progress: Int, fromUser: Boolean) {
                 brightnessNum.setText(progress.toString())
+                LED0B = progress.toDouble()
             }
 
             //Unused
             override fun onStartTrackingTouch(bar: SeekBar?) { return }
-            override fun onStopTrackingTouch(bar: SeekBar?) { return }
+            override fun onStopTrackingTouch(bar: SeekBar?) {
+                Send()
+            }
         })
 
         //Change brightness bar when number changes
@@ -83,11 +107,14 @@ class HomeFragment : Fragment() {
         frequencySeek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(bar: SeekBar?, progress: Int, fromUser: Boolean) {
                 frequencyNum.setText(progress.toString())
+                LED0F = progress.toDouble()
             }
 
             //Unused
             override fun onStartTrackingTouch(bar: SeekBar?) { return }
-            override fun onStopTrackingTouch(bar: SeekBar?) { return }
+            override fun onStopTrackingTouch(bar: SeekBar?) {
+                Send()
+            }
         })
 
         //Change brightness bar when number changes
