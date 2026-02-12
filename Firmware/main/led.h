@@ -1,11 +1,3 @@
-/* LEDC (LED Controller) basic example
-
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
-
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
-*/
 #ifndef LED_H
 #define LED_H
 
@@ -61,6 +53,16 @@
 #define MAX_SEQUENCE_LENGTH     1000
 #define MAX_FREQUENCY           100
 
+//HARDWARE SPECIFIC PARAMETERS:
+#define NUM_LIGHTS              16 //Number of lights for this specific hardware
+#define NUM_SECTIONS            4  //Number of controllable sections
+#define NUM_MODULES             0  //Num of additional input/output modules
+
+//String helper to convert num_lights into string later on
+//From: https://stackoverflow.com/questions/5459868/concatenate-int-to-string-using-c-preprocessor
+#define STR_HELPER(x) #x
+#define STR(x) STR_HELPER(x)
+
 extern uint32_t LED_GPIO[];
 extern ledc_timer_t LED_TIMERS[];
 extern ledc_channel_t LED_CHANNELS[];
@@ -85,6 +87,18 @@ typedef struct
     int N;
     Block* blocks; //Will be M number of entries for each block
 } Sequence ;
+
+
+
+//Struct to hold information for each light and its section/locations
+typedef struct
+{
+    int x;
+    int y;
+    int section;
+} LightLocation ;
+
+
 
 
 
@@ -116,6 +130,8 @@ void run_LED_sequence(void);
  */
 
 void init_leds(void);
+
+void set_led_locations(void);
 
 //Divide up sequencing information from Bluetooth to convert to frequency and duty cycle
 void translate_sequence_package(unsigned char* sequence);

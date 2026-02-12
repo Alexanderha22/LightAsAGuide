@@ -1,4 +1,5 @@
 #include "led.h"
+#include "bluedroid_spp.h"
 
 uint32_t LED_GPIO[] = {LEDC0_OUTPUT_IO, LEDC1_OUTPUT_IO, LEDC2_OUTPUT_IO, LEDC3_OUTPUT_IO};
 ledc_timer_t LED_TIMERS[] = {LEDC0_TIMER, LEDC1_TIMER, LEDC2_TIMER, LEDC3_TIMER};
@@ -13,6 +14,8 @@ float currentTimeStamp;
 float nextTimeStamp;
 int sequenceStarted;
 int sequenceComplete;
+
+LightLocation LEDlocations[NUM_LIGHTS];
 
 void init_sequence(void)
 {
@@ -240,179 +243,86 @@ void init_leds(void)
         ledc_set_duty(LEDC_MODE, LED_CHANNELS[i], 0);
         ledc_update_duty(LEDC_MODE, LED_CHANNELS[i]);
     }
+
+    //Establish LED locations and sections on board
+    set_led_locations();
+}
+
+void set_led_locations(void)
+{
+    //Set all LED locations and sections
+    LEDlocations[0].x = 14;
+    LEDlocations[0].y = 14;
+    LEDlocations[0].section = 0;
+
+    LEDlocations[1].x = 14;
+    LEDlocations[1].y = -14;
+    LEDlocations[1].section = 0;
+
+    LEDlocations[2].x = -14;
+    LEDlocations[2].y = -14;
+    LEDlocations[2].section = 0;
+
+    LEDlocations[3].x = -14;
+    LEDlocations[3].y = 14;
+    LEDlocations[3].section = 0;
+
+    LEDlocations[4].x = 50;
+    LEDlocations[4].y = 0;
+    LEDlocations[4].section = 1;
+
+    LEDlocations[5].x = 0;
+    LEDlocations[5].y = 50;
+    LEDlocations[5].section = 1;
+
+    LEDlocations[6].x = -50;
+    LEDlocations[6].y = 0;
+    LEDlocations[6].section = 1;
+
+    LEDlocations[7].x = 0;
+    LEDlocations[7].y = -50;
+    LEDlocations[7].section = 1;
+
+    LEDlocations[8].x = -63;
+    LEDlocations[8].y = 63;
+    LEDlocations[8].section = 2;
+
+    LEDlocations[9].x = -63;
+    LEDlocations[9].y = 63;
+    LEDlocations[9].section = 2;
+
+    LEDlocations[10].x = -63;
+    LEDlocations[10].y = -63;
+    LEDlocations[10].section = 2;
+
+    LEDlocations[11].x = 63;
+    LEDlocations[11].y = 63;
+    LEDlocations[11].section = 2;
+
+    LEDlocations[12].x = 89;
+    LEDlocations[12].y = 0;
+    LEDlocations[12].section = 3;
+
+    LEDlocations[13].x = 0;
+    LEDlocations[13].y = 89;
+    LEDlocations[13].section = 3;
+
+    LEDlocations[14].x = -89;
+    LEDlocations[14].y = 0;
+    LEDlocations[14].section = 3;
+
+    LEDlocations[15].x = 0;
+    LEDlocations[15].y = -89;
+    LEDlocations[15].section = 3;
+
+
+
 }
 
 void translate_sequence_package(unsigned char* sequence)
 {
-
-    //Check for sequence size
-    size_t sequence_size = strlen((char*)sequence);
-
-    if (sequence_size < 1)
-    {
-        return;
-    }
-
-    size_t command_size = 0;
-
-    //Check for type of command
-    //Need to look at first section before first comma
-    for (int i = 0; i < sequence_size; i++)
-    {
-        if (sequence[i] == 44) //Comma ASCII code
-        {
-            command_size = i;
-            break;
-        }
-    }
-
-    //Copy over command
-    unsigned char command[command_size + 1];
-
-    for (int i = 0; i < command_size; i++)
-    {
-        command[i] = sequence[i];
-    }
-    
-    command[command_size] = '\0';
-
-    //Check for command
-    if (strcmp("SendSession", (char*)command) == 0)
-    {
-        //Parsing for sequencing information
-
-        //Convert command to c-style string
-        char SequenceString[strlen((char*)sequence) + 1];
-        strcpy(SequenceString, (char*)sequence);
-
-        //Get first line of sequence before line break character
-        char* firstLine = strtok(SequenceString, "\n");
-
-        //Parse 3 times to split command, M, and N
-        char* strPtr = strtok(firstLine, ",");
-        
-        //First is command, store
-        StoredSequence.Command = malloc(strlen(strPtr) + 1);
-        strcpy(StoredSequence.Command, strPtr);
-
-        //Move to next one
-        strPtr = strtok(NULL, ",");
-
-        //Store second value (M)
-        StoredSequence.M = atoi(strPtr);
-
-        //Move to next one
-        strPtr = strtok(NULL, ",");
-
-        //Store thrid value (N)
-        StoredSequence.N = atoi(strPtr);
-
-        //Get sequence again
-        strcpy(SequenceString, (char*)sequence);
-
-        strPtr = strtok(SequenceString, "\n");
-
-        //Move to next one since we do not need first line
-        strPtr = strtok(NULL, "\n");
-
-        //Keep track of what block we are on
-        int blockNum = 0;
-
-        //Array to hold all the blocks as strings
-        char blockStrings[StoredSequence.M][((StoredSequence.N * 2) + 1) * 8];
-
-        //Collects all the blocks as strings
-        while(strPtr != NULL)
-        {
-
-            strcpy(blockStrings[blockNum], strPtr);
-
-            //Move to next block
-            strPtr = strtok(NULL, "\n");
-
-            //Increment
-            blockNum++;
-        
-        }
-
-        //Need to allocate space for block array in stored sequence
-        StoredSequence.blocks = malloc(StoredSequence.M * sizeof(Block));
-
-        //Need to loop through all blocks
-        for (int i = 0; i < StoredSequence.M; i++)
-        {
-            char blockString[strlen(blockStrings[i]) + 1];
-            strcpy(blockString, blockStrings[i]);
-
-            //Need to parse the blockstring by , to get timestamp and settings
-            char* blockPtr = strtok(blockString, ",");
-
-            //First is the time stamp, need to store
-            StoredSequence.blocks[i].TimeStamp = atof(blockPtr);
-
-            //Need to loop through all light settings
-            //Need to allocate space for settings
-            StoredSequence.blocks[i].settings = malloc(StoredSequence.N * sizeof(LightSetting));
-            for (int j = 0; j < StoredSequence.N; j++)
-            {
-                //Next parse is setting for brightness
-                blockPtr = strtok(NULL, ",");
-                StoredSequence.blocks[i].settings[j].DutyCycle = atof(blockPtr);
-
-                //Next parse is setting for frequency
-                blockPtr = strtok(NULL, ",");
-                StoredSequence.blocks[i].settings[j].Frequency = atof(blockPtr);
-            }
-        }
-
-    }
-    else if (strcmp("SetSection", (char*)command) == 0)
-    {
-        //Convert command to c-style string
-        char SequenceString[strlen((char*)sequence) + 1];
-        strcpy(SequenceString, (char*)sequence);
-
-        //Goes to command
-        char* strPtr = strtok(SequenceString, ",");
-
-        //Stores command
-        StoredSequence.Command = malloc(strlen(strPtr) + 1);
-        strcpy(StoredSequence.Command, strPtr);
-
-        //Next goes to light number
-        strPtr = strtok(NULL, ",");
-        int lightNum = atoi(strPtr);
-
-        printf("Setting section number %i\n", lightNum);
-
-        //Next goes to brightness
-        strPtr = strtok(NULL, ",");
-        float givenDuty = atoi(strPtr);
-
-        //Set duty
-        
-        uint32_t duty = (pow(2, 13)) * (givenDuty / 100);
-        ledc_set_duty(LEDC_MODE, LED_CHANNELS[lightNum], duty);
-        ledc_update_duty(LEDC_MODE, LED_CHANNELS[lightNum]);
-        printf("Setting Brightness to %f\n", givenDuty);
-
-        //Next goes to frequency
-        strPtr = strtok(NULL, ",");
-        float frequency = atoi(strPtr);
-
-        //Set frequency
-        if (frequency == 0)
-        {   
-            printf("Setting LED to solid (0 frequency)\n");
-            ledc_set_freq(LEDC_MODE, LED_TIMERS[lightNum], 100);
-        }
-        else
-        {
-            printf("Setting frequency to %f\n", frequency);
-            ledc_set_freq(LEDC_MODE, LED_TIMERS[lightNum], frequency);
-        }
-    }
-    else if (strcmp("GetInfo", (char*)command) == 0)
+    //First check for commands with just one argument
+    if (strcmp("GetInfo", (char*)sequence) == 0)
     {
         //Need to send info back to APP about hard coded variables
         //Format:
@@ -426,9 +336,211 @@ void translate_sequence_package(unsigned char* sequence)
         //n = number of controllable sections
         //s = section light is part of
         //X & Y = position of light relative to (0,0) at center (VERIFY)
+
+        printf("Get info command recieved\n");
+
+        //Allocate enough space for each line
+        int commandLen = (NUM_LIGHTS * 20) + (NUM_SECTIONS * 30) + 30;
+        char returnCommand[commandLen];
+
+        //Adds num_lights and num_sections
+        sprintf(returnCommand, "SetInfo,%s,%s,\n", STR(NUM_LIGHTS), STR(NUM_SECTIONS));
+
+        //Loop for all the lights to load their location and section
+        for (int i = 0; i < NUM_LIGHTS; i++)
+        {
+            char buffer[20] = "";
+            sprintf(buffer, "L%i%i,L%i%i,L%i%i,\n", i, LEDlocations[i].x, i, LEDlocations[i].y, i, LEDlocations[i].section);
+            strcat(returnCommand, buffer);
+        }
+
+        //See if need to add anything about external modules
+        if (NUM_MODULES > 0)
+        {
+            //IMPLEMENT CODE FOR MODULE INFO
+        }
+
+        //Send message via bluetooth here?
+        bt_write(returnCommand, commandLen);
         
 
+        printf("Resulting GetInfo command: %s", returnCommand);
     }
+
+    else
+    {
+        //Check for sequence size
+        size_t sequence_size = strlen((char*)sequence);
+
+        if (sequence_size < 1)
+        {
+            return;
+        }
+
+        size_t command_size = 0;
+
+        //Check for type of command
+        //Need to look at first section before first comma
+        for (int i = 0; i < sequence_size; i++)
+        {
+            if (sequence[i] == 44) //Comma ASCII code
+            {
+                command_size = i;
+                break;
+            }
+        }
+
+        //Copy over command
+        unsigned char command[command_size + 1];
+
+        for (int i = 0; i < command_size; i++)
+        {
+            command[i] = sequence[i];
+        }
+        
+        command[command_size] = '\0';
+
+        //Check for command
+        if (strcmp("SendSession", (char*)command) == 0)
+        {
+            //Parsing for sequencing information
+
+            //Convert command to c-style string
+            char SequenceString[strlen((char*)sequence) + 1];
+            strcpy(SequenceString, (char*)sequence);
+
+            //Get first line of sequence before line break character
+            char* firstLine = strtok(SequenceString, "\n");
+
+            //Parse 3 times to split command, M, and N
+            char* strPtr = strtok(firstLine, ",");
+            
+            //First is command, store
+            StoredSequence.Command = malloc(strlen(strPtr) + 1);
+            strcpy(StoredSequence.Command, strPtr);
+
+            //Move to next one
+            strPtr = strtok(NULL, ",");
+
+            //Store second value (M)
+            StoredSequence.M = atoi(strPtr);
+
+            //Move to next one
+            strPtr = strtok(NULL, ",");
+
+            //Store thrid value (N)
+            StoredSequence.N = atoi(strPtr);
+
+            //Get sequence again
+            strcpy(SequenceString, (char*)sequence);
+
+            strPtr = strtok(SequenceString, "\n");
+
+            //Move to next one since we do not need first line
+            strPtr = strtok(NULL, "\n");
+
+            //Keep track of what block we are on
+            int blockNum = 0;
+
+            //Array to hold all the blocks as strings
+            char blockStrings[StoredSequence.M][((StoredSequence.N * 2) + 1) * 8];
+
+            //Collects all the blocks as strings
+            while(strPtr != NULL)
+            {
+
+                strcpy(blockStrings[blockNum], strPtr);
+
+                //Move to next block
+                strPtr = strtok(NULL, "\n");
+
+                //Increment
+                blockNum++;
+            
+            }
+
+            //Need to allocate space for block array in stored sequence
+            StoredSequence.blocks = malloc(StoredSequence.M * sizeof(Block));
+
+            //Need to loop through all blocks
+            for (int i = 0; i < StoredSequence.M; i++)
+            {
+                char blockString[strlen(blockStrings[i]) + 1];
+                strcpy(blockString, blockStrings[i]);
+
+                //Need to parse the blockstring by , to get timestamp and settings
+                char* blockPtr = strtok(blockString, ",");
+
+                //First is the time stamp, need to store
+                StoredSequence.blocks[i].TimeStamp = atof(blockPtr);
+
+                //Need to loop through all light settings
+                //Need to allocate space for settings
+                StoredSequence.blocks[i].settings = malloc(StoredSequence.N * sizeof(LightSetting));
+                for (int j = 0; j < StoredSequence.N; j++)
+                {
+                    //Next parse is setting for brightness
+                    blockPtr = strtok(NULL, ",");
+                    StoredSequence.blocks[i].settings[j].DutyCycle = atof(blockPtr);
+
+                    //Next parse is setting for frequency
+                    blockPtr = strtok(NULL, ",");
+                    StoredSequence.blocks[i].settings[j].Frequency = atof(blockPtr);
+                }
+            }
+
+        }
+        else if (strcmp("SetSection", (char*)command) == 0)
+        {
+            //Convert command to c-style string
+            char SequenceString[strlen((char*)sequence) + 1];
+            strcpy(SequenceString, (char*)sequence);
+
+            //Goes to command
+            char* strPtr = strtok(SequenceString, ",");
+
+            //Stores command
+            StoredSequence.Command = malloc(strlen(strPtr) + 1);
+            strcpy(StoredSequence.Command, strPtr);
+
+            //Next goes to light number
+            strPtr = strtok(NULL, ",");
+            int lightNum = atoi(strPtr);
+
+            printf("Setting section number %i\n", lightNum);
+
+            //Next goes to brightness
+            strPtr = strtok(NULL, ",");
+            float givenDuty = atoi(strPtr);
+
+            //Set duty
+            
+            uint32_t duty = (pow(2, 13)) * (givenDuty / 100);
+            ledc_set_duty(LEDC_MODE, LED_CHANNELS[lightNum], duty);
+            ledc_update_duty(LEDC_MODE, LED_CHANNELS[lightNum]);
+            printf("Setting Brightness to %f\n", givenDuty);
+
+            //Next goes to frequency
+            strPtr = strtok(NULL, ",");
+            float frequency = atoi(strPtr);
+
+            //Set frequency
+            if (frequency == 0)
+            {   
+                printf("Setting LED to solid (0 frequency)\n");
+                ledc_set_freq(LEDC_MODE, LED_TIMERS[lightNum], 100);
+            }
+            else
+            {
+                printf("Setting frequency to %f\n", frequency);
+                ledc_set_freq(LEDC_MODE, LED_TIMERS[lightNum], frequency);
+            }
+        }
+    }
+
+
+    
+
 
 }
 

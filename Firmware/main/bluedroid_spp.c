@@ -44,9 +44,10 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param);
 void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param);
 static char *bda2str(uint8_t * bda, char *str, size_t size);
 
+
 static RingbufHandle_t rx_rb = NULL;
 
-
+static esp_spp_cb_param_t *global_param;
 /*
  *   initializing bluetooth controller for use
  *   steps:
@@ -146,9 +147,20 @@ void bluetooth_init(RingbufHandle_t rb) {
     ESP_LOGI(SPP_TAG, "Own address:[%s]", bda2str((uint8_t *)esp_bt_dev_get_address(), bda_str, sizeof(bda_str)));
 }
 
+bool bt_write(char *str, int len) {
+    if (global_param->write.cong) { 
+        ESP_LOGI(SPP_TAG, "Congested");
+        return false;
+    }
+    ESP_LOGI(SPP_TAG, "Contents: %s", str);
+    esp_spp_write(global_param->write.handle, len, (uint8_t *)str);
+    return true;
+}
+
 // callback function to handle all spp events
 static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
 {
+    global_param = param;
     char bda_str[18] = {0};
 
     switch (event) {
@@ -211,9 +223,8 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
         } else {
             msg = "Sent data to ring buffer successfully\r\n";
             esp_spp_write(param->data_ind.handle, strlen(msg), (uint8_t *)msg);
-            break;
         }
-        
+        break;
     case ESP_SPP_CONG_EVT: // bluetooth stack is backed up (error)
         ESP_LOGI(SPP_TAG, "ESP_SPP_CONG_EVT");
         break;
@@ -222,7 +233,7 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
         // This event confirms that data passed to esp_spp_write has been sent to the lower layer.
         // It doesn't mean the remote device has received it yet.
         if (param->write.status == ESP_SPP_SUCCESS) {
-                ESP_LOGI(SPP_TAG, "SPP Write successful, handle: %d, len: %d, cong: %s",
+                ESP_LOGI(SPP_TAG, "SPP Write successful, handle: %d, len: %d, cong: %s,",
                         param->write.handle, param->write.len, param->write.cong ? "congested" : "not congested");
             if (param->write.cong) {
                 ESP_LOGW(SPP_TAG, "SPP link congested after write. Consider pausing further writes.");
