@@ -39,6 +39,12 @@ class HomeFragment : Fragment() {
 
         fun Send()
         {
+            // Do not send if device is running a session
+            if(HardwareSystem.state == HardwareSystem.HardwareState.RUNNING)
+            {
+                Toast.makeText(requireContext(), "Device currently running session", Toast.LENGTH_SHORT).show()
+                return;
+            }
             try {
                 val ls : LightSource = LightSource(LED0B, LED0F)
                 HardwareSystem.uC_SetSection(0, ls)

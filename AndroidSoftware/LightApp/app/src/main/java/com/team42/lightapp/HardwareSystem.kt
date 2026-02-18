@@ -99,7 +99,7 @@ object HardwareSystem
         // Previously initialized, maintain these values
         if(sectionCount != 0)
         {
-            state = HardwareState.INITIALIZED
+            state = HardwareState.IDLE
         }
         return true
     }
@@ -134,6 +134,7 @@ object HardwareSystem
         }
 
         btThread!!.write(message.toByteArray())
+        state = HardwareState.RUNNING
     }
     fun uC_StopAll()
     {
@@ -160,7 +161,8 @@ object HardwareSystem
     {
         DISCONNECTED,
         CONNECTED,
-        INITIALIZED,
+        IDLE,
+        RUNNING,
     }
 
     // Bluetooth connection
@@ -301,7 +303,7 @@ object HardwareSystem
                         currentIndex += 4
                     }
 
-                    state = HardwareState.INITIALIZED
+                    state = HardwareState.IDLE
                 }
                 catch (e : NumberFormatException) {
                     Toast.makeText(context, "Invalid Parameters for SetInfo", Toast.LENGTH_SHORT).show()
@@ -324,6 +326,10 @@ object HardwareSystem
             }
             "SendError" -> {
                 Toast.makeText(context, "Error: ${split[1]}", Toast.LENGTH_SHORT).show()
+            }
+            "SessionEnd" -> {
+                Toast.makeText(context, "Session Finished", Toast.LENGTH_SHORT).show()
+                state = HardwareState.IDLE
             }
             else -> Toast.makeText(context, "Unrecognized Command: ${split[0]}", Toast.LENGTH_SHORT).show()
         }
