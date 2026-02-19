@@ -12,19 +12,27 @@ Sequence StoredSequence;
 int currentBlock;
 float currentTimeStamp;
 float nextTimeStamp;
+float sequenceStartTime;
 int sequenceStarted;
 int sequenceComplete;
+FSMState GlobalState;
+
+//LED setting variables
+LEDSettings Section0Settings = {0, 0, 0};
+LEDSettings Section1Settings = {0, 0, 0};
+LEDSettings Section2Settings = {0, 0, 0};
+LEDSettings Section3Settings = {0, 0, 0};
+
+//LED setting variables
+LEDSettings* LED_SETTINGS[4] = {&Section0Settings, &Section1Settings, &Section2Settings, &Section3Settings};
+
+
+
 
 LightLocation LEDlocations[NUM_LIGHTS];
 
 void init_sequence(void)
 {
-    // Create a timer instance
-    ESP_ERROR_CHECK(gptimer_new_timer(&timer_config, &gptimer));
-    // Enable the timer
-    ESP_ERROR_CHECK(gptimer_enable(gptimer));
-    // Start the timer
-    ESP_ERROR_CHECK(gptimer_start(gptimer));
 
     //Start sequence
     currentBlock = 0;
@@ -42,15 +50,11 @@ void run_LED_sequence(void)
 {
 
     //Check what time on timer 
-    uint32_t resolution_hz;
-    ESP_ERROR_CHECK(gptimer_get_resolution(gptimer, &resolution_hz));
-    uint64_t count;
-    ESP_ERROR_CHECK(gptimer_get_raw_count(gptimer, &count));
-    float current_time = (double)count / resolution_hz;
+    float current_time = get_current_time();
 
     printf("Current Time: %f\n", current_time);
 
-    if (currentTimeStamp <= current_time)
+    if (currentTimeStamp <= current_time - sequenceStartTime) //See if enough time from start of sequence has passed
     {     
 
         printf("Current Time Stamp: %f\n", currentTimeStamp);
@@ -138,6 +142,32 @@ void run_LED_sequence(void)
         currentTimeStamp = nextTimeStamp;
         currentBlock++;
     }
+}
+
+void calculate_LED_settings(int lightNum, float duty, float frequency)
+{
+
+    //Calculate flashing period from given frequency
+    float period;
+    if (frequency != 0)
+    {
+        period = 1 / frequency;
+    }
+    else
+    {
+        period = -1;
+    }
+
+    printf("Saving LED settings\n");
+
+
+    //Store the values
+    LED_SETTINGS[lightNum]->duty = duty;
+    LED_SETTINGS[lightNum]->period = period;
+    LED_SETTINGS[lightNum]->start_time = get_current_time();
+
+    printf("Done saving LED settings\n");
+
 }
 
 void init_leds(void)
@@ -246,6 +276,18 @@ void init_leds(void)
 
     //Establish LED locations and sections on board
     set_led_locations();
+}
+
+void init_state(void)
+{
+    GlobalState = STANDBY;
+
+    // Create a timer instance
+    ESP_ERROR_CHECK(gptimer_new_timer(&timer_config, &gptimer));
+    // Enable the timer
+    ESP_ERROR_CHECK(gptimer_enable(gptimer));
+    // Start the timer
+    ESP_ERROR_CHECK(gptimer_start(gptimer));
 }
 
 void set_led_locations(void)
@@ -367,6 +409,15 @@ void translate_sequence_package(unsigned char* sequence)
         printf("Resulting GetInfo command: %s", returnCommand);
     }
 
+    else if (strcmp("StopAll", (char*)sequence) == 0)
+    {
+        //Turn off LEDS and reset them, stop sequence, reset state
+        turn_off_leds();
+
+        GlobalState = STANDBY;
+
+    }
+
     else
     {
         //Check for sequence size
@@ -403,7 +454,9 @@ void translate_sequence_package(unsigned char* sequence)
         //Check for command
         if (strcmp("SendSession", (char*)command) == 0)
         {
-            //Parsing for sequencing information
+
+
+            //Begin parsing for sequencing information
 
             //Convert command to c-style string
             char SequenceString[strlen((char*)sequence) + 1];
@@ -489,6 +542,16 @@ void translate_sequence_package(unsigned char* sequence)
                 }
             }
 
+            //Save what time this command was recieved (start time)
+            sequenceStartTime = get_current_time();
+
+            //Have LEDS reset
+            turn_off_leds();
+
+            //Set global state to begin sequence task
+            GlobalState = SEQUENCE;
+
+
         }
         else if (strcmp("SetSection", (char*)command) == 0)
         {
@@ -516,25 +579,33 @@ void translate_sequence_package(unsigned char* sequence)
             //Set duty
             
             uint32_t duty = (pow(2, 13)) * (givenDuty / 100);
-            ledc_set_duty(LEDC_MODE, LED_CHANNELS[lightNum], duty);
-            ledc_update_duty(LEDC_MODE, LED_CHANNELS[lightNum]);
-            printf("Setting Brightness to %f\n", givenDuty);
+            /*ledc_set_duty(LEDC_MODE, LED_CHANNELS[lightNum], duty);
+            ledc_update_duty(LEDC_MODE, LED_CHANNELS[lightNum]);*/
+            printf("Setting Brightness to %f\n", givenDuty); 
 
             //Next goes to frequency
             strPtr = strtok(NULL, ",");
             float frequency = atoi(strPtr);
 
-            //Set frequency
-            if (frequency == 0)
+            //Set if solid or off (doesnt need to be handled by task for flashing)
+            if (frequency == 0) //Solid
             {   
                 printf("Setting LED to solid (0 frequency)\n");
                 ledc_set_freq(LEDC_MODE, LED_TIMERS[lightNum], 100);
+                ledc_set_duty(LEDC_MODE, LED_CHANNELS[lightNum], duty);
+                ledc_update_duty(LEDC_MODE, LED_CHANNELS[lightNum]);
             }
-            else
+            else if (givenDuty == 0) //Off
             {
-                printf("Setting frequency to %f\n", frequency);
-                ledc_set_freq(LEDC_MODE, LED_TIMERS[lightNum], frequency);
+                ledc_set_duty(LEDC_MODE, LED_CHANNELS[lightNum], duty);
+                ledc_update_duty(LEDC_MODE, LED_CHANNELS[lightNum]);
             }
+
+            //Updated LED settings
+            calculate_LED_settings(lightNum, duty, frequency);
+
+            //Update state
+            GlobalState = LIVE_CONTROL;
         }
     }
 
@@ -546,10 +617,25 @@ void translate_sequence_package(unsigned char* sequence)
 
 void turn_off_leds(void)
 {
-    //Turn off all LEDs to start
+    //Turn off all LEDs to start and reset frequencies to default
     for (int i = 0; i < 4; i++)
     {
         ledc_set_duty(LEDC_MODE, LED_CHANNELS[i], 0);
         ledc_update_duty(LEDC_MODE, LED_CHANNELS[i]);
+        ledc_set_freq(LEDC_MODE, LED_TIMERS[i], 100);
+
     }
+
+}
+
+//Get current time on timer
+float get_current_time()
+{
+    uint32_t resolution_hz;
+    ESP_ERROR_CHECK(gptimer_get_resolution(gptimer, &resolution_hz));
+    uint64_t count;
+    ESP_ERROR_CHECK(gptimer_get_raw_count(gptimer, &count));
+    float current_time = (double)count / resolution_hz;
+
+    return current_time;
 }

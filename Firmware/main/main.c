@@ -1,18 +1,17 @@
 #include "bluedroid_spp.h"
 #include "parse_data_task.h"
+#include "run_leds_task.h"
 #include "led.h"
 
 void app_main(void)
 {
 
-/*     //TESTING
-    init_leds();
+    //TESTING
+/*     unsigned char inputsequence4[] = "GetInfo";
 
-    unsigned char inputsequence4[] = "GetInfo";
+    translate_sequence_package(inputsequence4); 
 
-    translate_sequence_package(inputsequence4); */
-
-    /* unsigned char inputsequence[] = "SetSection,0,20,20";
+    unsigned char inputsequence[] = "SetSection,0,20,20";
     
     translate_sequence_package(inputsequence);
 
@@ -34,6 +33,7 @@ void app_main(void)
 
 
 
+
     
     /////////////////////////////////////////////
 
@@ -42,10 +42,17 @@ void app_main(void)
     assert(rb);
 
     init_leds();
+    init_state();
 
-    xTaskCreate(parse_data_task, "parser", 4096, rb, 5, NULL);
+    //Runs the command parsing from bluetooth on core 0
+    xTaskCreatePinnedToCore(parse_data_task, "parser", 4096, rb, 5, NULL, 0);
+
+    //Runs the led software on core 1
+    xTaskCreatePinnedToCore(run_leds_task, "led_handling", 4096, NULL, 5, NULL, 1);
 
     bluetooth_init(rb);
+
+
 
     
 }

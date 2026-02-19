@@ -22,28 +22,28 @@
 #define LEDC0_OUTPUT_IO          (16) // Define the output GPIO
 #define LEDC0_CHANNEL            LEDC_CHANNEL_0
 #define LEDC0_DUTY               (0) // Set duty to 0%. (2 ** 13) * 50% = 4096
-#define LEDC0_FREQUENCY          (10) // Frequency in Hertz
+#define LEDC0_FREQUENCY          (100) // Frequency in Hertz
 
 //LED1 on GPIO17
 #define LEDC1_TIMER              LEDC_TIMER_1
 #define LEDC1_OUTPUT_IO          (17) // Define the output GPIO
 #define LEDC1_CHANNEL            LEDC_CHANNEL_1
 #define LEDC1_DUTY               (0) // Set duty to 0%. (2 ** 13) * 50% = 4096
-#define LEDC1_FREQUENCY          (10) // Frequency in Hertz
+#define LEDC1_FREQUENCY          (100) // Frequency in Hertz
 
 //LED2 on GPIO18
 #define LEDC2_TIMER              LEDC_TIMER_2
 #define LEDC2_OUTPUT_IO          (18) // Define the output GPIO
 #define LEDC2_CHANNEL            LEDC_CHANNEL_2
 #define LEDC2_DUTY               (0) // Set duty to 0%. (2 ** 13) * 50% = 4096
-#define LEDC2_FREQUENCY          (10) // Frequency in Hertz. Set frequency at 4 kHz
+#define LEDC2_FREQUENCY          (100) // Frequency in Hertz. Set frequency at 4 kHz
 
 //LED3 on GPIO19
 #define LEDC3_TIMER              LEDC_TIMER_3
 #define LEDC3_OUTPUT_IO          (19) // Define the output GPIO
 #define LEDC3_CHANNEL            LEDC_CHANNEL_3
 #define LEDC3_DUTY               (0) // Set duty to 0%. (2 ** 13) * 50% = 4096
-#define LEDC3_FREQUENCY          (10) // Frequency in Hertz. Set frequency at 4 kHz
+#define LEDC3_FREQUENCY          (100) // Frequency in Hertz. Set frequency at 4 kHz
 
 
 //General
@@ -66,6 +66,8 @@
 extern uint32_t LED_GPIO[];
 extern ledc_timer_t LED_TIMERS[];
 extern ledc_channel_t LED_CHANNELS[];
+
+
 
 //Structs to define sequence settings
 typedef struct
@@ -98,7 +100,31 @@ typedef struct
     int section;
 } LightLocation ;
 
+//Enum to contain which state the program is in
+typedef enum
+{
+    SEQUENCE,
+    LIVE_CONTROL,
+    STANDBY
+} FSMState ;
 
+extern FSMState GlobalState;
+
+//LED settings for live control to be stored here
+//Used by run_leds_task
+typedef struct
+{
+    uint32_t duty;
+    float period;
+    float start_time;
+} LEDSettings;
+
+extern LEDSettings Section0Settings;
+extern LEDSettings Section1Settings;
+extern LEDSettings Section2Settings;
+extern LEDSettings Section3Settings;
+
+extern LEDSettings* LED_SETTINGS[4];
 
 
 
@@ -121,6 +147,10 @@ void init_sequence(void);
 //Use stored sequence and timer to enable/disable LEDs
 void run_LED_sequence(void);
 
+//Calculate the correct flashing period and brightness when recieving info for setsection
+void calculate_LED_settings(int lightNum, float givenDuty, float frequency);
+
+
 
 
 /* Warning:
@@ -131,12 +161,16 @@ void run_LED_sequence(void);
 
 void init_leds(void);
 
+void init_state(void);
+
 void set_led_locations(void);
 
 //Divide up sequencing information from Bluetooth to convert to frequency and duty cycle
 void translate_sequence_package(unsigned char* sequence);
 
 void turn_off_leds(void);
+
+float get_current_time();
 
 #endif
 
