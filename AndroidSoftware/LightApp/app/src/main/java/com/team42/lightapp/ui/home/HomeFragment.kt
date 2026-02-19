@@ -1,5 +1,6 @@
 package com.team42.lightapp.ui.home
 
+import android.hardware.lights.Light
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -33,62 +34,67 @@ class HomeFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
 
-
-        var LED0B : Double = 0.0
-        var LED0F : Double = 0.0
-
-        fun Send()
-        {
-            // Do not send if device is running a session
-            if(HardwareSystem.state == HardwareSystem.HardwareState.RUNNING)
-            {
-                Toast.makeText(requireContext(), "Device currently running session", Toast.LENGTH_SHORT).show()
-                return;
-            }
-            try {
-                val ls : LightSource = LightSource(LED0B, LED0F)
-                HardwareSystem.uC_SetSection(0, ls)
-            }
-            catch (err : NullPointerException)
-            {
-                Toast.makeText(requireContext(), "Device not initialized", Toast.LENGTH_SHORT).show()
-            }
-        }
-
-
         val homeViewModel =
             ViewModelProvider(this).get(HomeViewModel::class.java)
 
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        //val textView: TextView = binding.textHome
-        //homeViewModel.text.observe(viewLifecycleOwner) {
-        //    textView.text = it
-        //}
+        var currentIndex = 0
 
+        // ON OFF
         val switch: Switch = binding.homeSwitchStatus
-        switch.isChecked
 
-        //BRIGHTNESS
+        // BRIGHTNESS
         val brightnessNum: EditText = binding.homeEditBrightness
         val brightnessSeek: SeekBar = binding.homeBrightnessSeek
 
-        //Change number when brightness bar changes
+        // FREQUENCY
+        val frequencyNum: EditText = binding.homeEditFrequency
+        val frequencySeek: SeekBar = binding.homeFrequencySeek
+
+        // Send data to hardware
+        fun Send()
+        {
+            try {
+                if(switch.isChecked)
+                {
+                    val ls : LightSource = LightSource(brightnessSeek.progress.toDouble(), frequencySeek.progress.toDouble())
+                    HardwareSystem.uC_SetSection(currentIndex, ls)
+                }
+                else {
+                    val ls : LightSource = LightSource(0.0,0.0)
+                    HardwareSystem.uC_SetSection(currentIndex, ls)
+                }
+            }
+            catch (e: Exception) {
+                // If there is an error, toast it
+                when (e) {
+                    is NullPointerException -> Toast.makeText(requireContext(), "Device not initialized", Toast.LENGTH_SHORT).show()
+                    else -> Toast.makeText(requireContext(), e.message, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+
+        // Update Brightness
+
+        // Change number when brightness bar changes
         brightnessSeek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(bar: SeekBar?, progress: Int, fromUser: Boolean) {
                 brightnessNum.setText(progress.toString())
-                LED0B = progress.toDouble()
             }
 
             //Unused
             override fun onStartTrackingTouch(bar: SeekBar?) { return }
+
+            // Send when done tracking
             override fun onStopTrackingTouch(bar: SeekBar?) {
                 Send()
             }
         })
 
-        //Change brightness bar when number changes
+        // Change brightness bar when number changes
         brightnessNum.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(editable: Editable?) {;
                 val n: Int = try {
@@ -101,29 +107,31 @@ class HomeFragment : Fragment() {
             }
 
             override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) { return }
-            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) { return }
+
+            // Send when updated
+            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+                Send()
+            }
         })
 
+        // Update Frequency
 
-        //FREQUENCY
-        val frequencyNum: EditText = binding.homeEditFrequency
-        val frequencySeek: SeekBar = binding.homeFrequencySeek
-
-        //Change number when brightness bar changes
+        // Change number when brightness bar changes
         frequencySeek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(bar: SeekBar?, progress: Int, fromUser: Boolean) {
                 frequencyNum.setText(progress.toString())
-                LED0F = progress.toDouble()
             }
 
             //Unused
             override fun onStartTrackingTouch(bar: SeekBar?) { return }
+
+            // Send when done tracking
             override fun onStopTrackingTouch(bar: SeekBar?) {
                 Send()
             }
         })
 
-        //Change brightness bar when number changes
+        // Change brightness bar when number changes
         frequencyNum.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(editable: Editable?) {
                 val n: Int = try {

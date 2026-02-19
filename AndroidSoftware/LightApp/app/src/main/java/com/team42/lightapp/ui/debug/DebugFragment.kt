@@ -50,20 +50,8 @@ class DebugFragment : Fragment() {
     ): View {
         val rootView = inflater.inflate(R.layout.fragment_debug, container, false)
 
-        // Find the button by its ID
-        val saveButton: Button = rootView.findViewById(R.id.savebutton)
-        val btConnectButton : Button = rootView.findViewById(R.id.btConnect)
-        val permissionButton : Button = rootView.findViewById(R.id.getPermission)
-        val btSendSessionButton : Button = rootView.findViewById(R.id.btSendSession)
-
-        // Set a click listener on the button
-        saveButton.setOnClickListener {
-            // Handle the button click event here
-            viewModel.saveSessionTest(HardwareSystem)
-        }
-
-        // Get permission
-        permissionButton.setOnClickListener{
+        // Assign functions to the buttons
+        rootView.findViewById<Button>(R.id.getPermission).setOnClickListener{
             if (ActivityCompat.checkSelfPermission(
                     requireContext(),
                     Manifest.permission.BLUETOOTH_SCAN
@@ -89,9 +77,7 @@ class DebugFragment : Fragment() {
                 Toast.makeText(requireContext(), "Permissions already Granted", Toast.LENGTH_SHORT).show()
             }
         }
-
-        // Need to check permission everywhere
-        btConnectButton.setOnClickListener {
+        rootView.findViewById<Button>(R.id.btConnect).setOnClickListener {
             if (ActivityCompat.checkSelfPermission(
                     requireContext(),
                     Manifest.permission.BLUETOOTH_SCAN
@@ -108,6 +94,7 @@ class DebugFragment : Fragment() {
                 if(HardwareSystem.connectToPairedDevice(requireContext()))
                 {
                     Toast.makeText(requireContext(), "Connected", Toast.LENGTH_SHORT).show()
+                    HardwareSystem.uC_GetInfo()
                 }
                 else
                 {
@@ -115,8 +102,23 @@ class DebugFragment : Fragment() {
                 }
             }
         }
+        rootView.findViewById<Button>(R.id.btDisconnect).setOnClickListener{
+            if(HardwareSystem.closeConnection())
+            {
+                Toast.makeText(requireContext(), "Disconnected", Toast.LENGTH_SHORT).show()
+            }
+        }
 
-        btSendSessionButton.setOnClickListener{
+        rootView.findViewById<Button>(R.id.stopTest).setOnClickListener{
+            try {
+                HardwareSystem.uC_StopAll()
+            }
+            catch (err : NullPointerException)
+            {
+                Toast.makeText(requireContext(), "Device not initialized", Toast.LENGTH_SHORT).show()
+            }
+        }
+        rootView.findViewById<Button>(R.id.sessionTest).setOnClickListener{
             // Create test session
             HardwareSystem.sectionCount = 4
 
@@ -154,47 +156,7 @@ class DebugFragment : Fragment() {
                 Toast.makeText(requireContext(), "Device not initialized", Toast.LENGTH_SHORT).show()
             }
         }
-
-
-        rootView.findViewById<Button>(R.id.btDisconnect).setOnClickListener{
-            if(HardwareSystem.closeConnection())
-            {
-                Toast.makeText(requireContext(), "Disconnected", Toast.LENGTH_SHORT).show()
-            }
-        }
-        fun printParseResult()
-        {
-            Log.d("Parse", "SectionCount: ${HardwareSystem.sectionCount}")
-            for(info in HardwareSystem.ledList)
-            {
-                Log.d("Parse", "X:${info.x} Y:${info.y} S:${info.section}")
-            }
-
-            HardwareSystem.externalModuleMap.forEach {
-                    eID, module -> Log.d("Parse", "EID:$eID Name:${module.name} Description:${module.description}")
-            }
-        }
-        rootView.findViewById<Button>(R.id.btParseTest).setOnClickListener{
-            var incomingMessage = "SetInfo,3,3," +
-                    "0,0,0," +
-                    "0,1,1," +
-                    "1,1,2"
-
-            HardwareSystem.parseTest(requireContext(), incomingMessage)
-            printParseResult()
-
-            incomingMessage = "SetInfo,10,2,"
-            for(i in 0 until 10)
-            {
-                incomingMessage += "$i,$i,${i%2},"
-            }
-            incomingMessage += "23,Input,E Module,This is an external device"
-            HardwareSystem.parseTest(requireContext(), incomingMessage)
-            printParseResult()
-
-        }
-
-        rootView.findViewById<Button>(R.id.btSetSingle).setOnClickListener{
+        rootView.findViewById<Button>(R.id.sectionTest).setOnClickListener{
             try {
                 val ls : LightSource = LightSource(50.0, 10.0)
                 HardwareSystem.uC_SetSection(3,ls)

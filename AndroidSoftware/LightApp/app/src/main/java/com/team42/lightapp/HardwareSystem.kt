@@ -31,7 +31,7 @@ object HardwareSystem
     var sectionCount = 0
     val ledList : MutableList<LEDInfo> = mutableListOf()
     val externalModuleMap : MutableMap<Int, ExternalModule> = mutableMapOf()
-    var state : HardwareState = HardwareState.DISCONNECTED
+    private var state : HardwareState = HardwareState.DISCONNECTED
 
     // Finds the required bluetooth connection from the list of paired devices, attempts to connect
     @RequiresApi(Build.VERSION_CODES.S)
@@ -101,6 +101,9 @@ object HardwareSystem
         {
             state = HardwareState.IDLE
         }
+
+        // Once connected, try to getInfo
+        uC_GetInfo()
         return true
     }
 
@@ -142,7 +145,12 @@ object HardwareSystem
     }
     fun uC_SetSection(index : Int, source : LightSource)
     {
-        if(index < sectionCount) throw Exception("Index cannot be greater than section count")
+        // Do not send if device is running a session
+        if(HardwareSystem.state == HardwareSystem.HardwareState.RUNNING)
+            throw Exception("Device currently running session")
+
+        if(index < sectionCount)
+            throw Exception("Index cannot be greater than section count")
 
         btThread!!.write("SetSection,${index},${source.brightness},${source.frequency}".toByteArray())
     }

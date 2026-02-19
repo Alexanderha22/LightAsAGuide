@@ -2,82 +2,94 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     tools:context=".ui.debug.DebugFragment">
+
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:gravity="center_vertical|center_horizontal"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="50dp"
-        android:layout_marginEnd="8dp">
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/debugTitleText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="S26-42 Light As A Guide"
+            android:textSize="26sp" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="50dp" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <Button
-                android:id="@+id/savebutton"
+            <TextView
+                android:id="@+id/header1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-
-                android:text="Save Session Test" />
+                android:text="Debug"
+                android:textSize="20sp" />
 
             <Button
-                android:id="@+id/btParseTest"
+                android:id="@+id/getPermission"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="200dp"
+                android:text="Request Permission" />
 
-                android:text="Parse Received Message Test" />
+            <Button
+                android:id="@+id/btConnect"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Connect" />
+
+            <Button
+                android:id="@+id/btDisconnect"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Disconnect" />
+
 
         </LinearLayout>
 
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="50dp" />
 
-        <Button
-            android:id="@+id/getPermission"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-            android:text="Get Permission" />
+            <TextView
+                android:id="@+id/header2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Testing"
+                android:textSize="20sp" />
 
-        <Button
-            android:id="@+id/btConnect"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            <Button
+                android:id="@+id/stopTest"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Stop All Test" />
 
-            android:text="Connect" />
+            <Button
+                android:id="@+id/sessionTest"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Send Session Test" />
 
-        <Button
-            android:id="@+id/btSendSession"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            <Button
+                android:id="@+id/sectionTest"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Set LED0 Test" />
+        </LinearLayout>
 
-            android:layout_gravity="center"
-
-            android:text="CDR Demo" />
-
-        <Button
-            android:id="@+id/btSetSingle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-
-            android:layout_gravity="center"
-
-            android:text="Set Light 3" />
-        <Button
-            android:id="@+id/btDisconnect"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-
-            android:layout_gravity="center"
-
-            android:text="Disconnect" />
     </LinearLayout>
-
-
 
 </FrameLayout>
