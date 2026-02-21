@@ -19,6 +19,8 @@ class DebugViewModel : ViewModel()
 {
     // TODO: Implement the ViewModel
 
+    // Old test function, delete later
+    /*
     fun saveSessionTest(hs : HardwareSystem)
     {
         // Delete all saved
@@ -74,7 +76,7 @@ class DebugViewModel : ViewModel()
             foundSession = SessionManager.getSession(s)
             Log.d("SaveTest", "Found Session Name: $s")
         }
-    }
+    }*/
 
 }
 

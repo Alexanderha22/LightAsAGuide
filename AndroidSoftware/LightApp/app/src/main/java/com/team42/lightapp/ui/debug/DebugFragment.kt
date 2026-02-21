@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.se.omapi.Session
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -23,8 +24,12 @@ import com.team42.lightapp.LightSource
 import com.team42.lightapp.R
 import com.team42.lightapp.SessionBlock
 import com.team42.lightapp.SessionManager
+import com.team42.lightapp.deleteSession
 import com.team42.lightapp.getSession
+import com.team42.lightapp.getSessionList
 import com.team42.lightapp.saveSession
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 class DebugFragment : Fragment() {
 
@@ -122,7 +127,7 @@ class DebugFragment : Fragment() {
             // Create test session
             HardwareSystem.sectionCount = 4
 
-            val session = LightSession("CDRDemo")
+            val session = LightSession("SessionTest")
             val lights = mutableListOf(
                 LightSource(0.0,    0.0),
                 LightSource(100.0,  1.0),
@@ -164,6 +169,85 @@ class DebugFragment : Fragment() {
             catch (err : NullPointerException)
             {
                 Toast.makeText(requireContext(), "Device not initialized", Toast.LENGTH_SHORT).show()
+            }
+
+        }
+        rootView.findViewById<Button>(R.id.saveTest).setOnClickListener{
+            // Set the name to the current time
+            val now = LocalDateTime.now()
+            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+            val dateTimeString = now.format(formatter)
+
+            HardwareSystem.sectionCount = 4
+            val session = LightSession(dateTimeString)
+
+            val lights = mutableListOf(
+                LightSource(0.0,    0.0),
+                LightSource(100.0,  1.0),
+                LightSource(85.3,   5.0),
+                LightSource(0.0,    4.0)
+            )
+
+            val lights2 = mutableListOf(
+                LightSource(50.0,   1.0),
+                LightSource(50.0,   2.0),
+                LightSource(50.0,   3.0),
+                LightSource(50.0,   4.0)
+            )
+
+            val lightsEnd = mutableListOf(
+                LightSource(0.0,   0.0),
+                LightSource(0.0,   0.0),
+                LightSource(0.0,   0.0),
+                LightSource(0.0,   0.0)
+            )
+
+            session.blocks.add(SessionBlock(lights, 0.0))
+            session.blocks.add(SessionBlock(lights2, 5.0))
+            session.blocks.add(SessionBlock(lightsEnd, 10.0))
+
+            SessionManager.saveSession(session)
+        }
+        rootView.findViewById<Button>(R.id.deleteSessionTest).setOnClickListener{
+            SessionManager.getSessionList().forEach{ session ->
+                SessionManager.deleteSession(session)
+            }
+        }
+        rootView.findViewById<Button>(R.id.saveManyTest).setOnClickListener{
+            // Set the name to the current time
+
+            HardwareSystem.sectionCount = 4
+            val session = LightSession("Test0")
+
+            val lights = mutableListOf(
+                LightSource(0.0,    0.0),
+                LightSource(100.0,  1.0),
+                LightSource(85.3,   5.0),
+                LightSource(0.0,    4.0)
+            )
+
+            val lights2 = mutableListOf(
+                LightSource(50.0,   1.0),
+                LightSource(50.0,   2.0),
+                LightSource(50.0,   3.0),
+                LightSource(50.0,   4.0)
+            )
+
+            val lightsEnd = mutableListOf(
+                LightSource(0.0,   0.0),
+                LightSource(0.0,   0.0),
+                LightSource(0.0,   0.0),
+                LightSource(0.0,   0.0)
+            )
+
+            session.blocks.add(SessionBlock(lights, 0.0))
+            session.blocks.add(SessionBlock(lights2, 5.0))
+            session.blocks.add(SessionBlock(lightsEnd, 10.0))
+
+            for(i in 0..<100)
+            {
+                session.name = "Test$i"
+                SessionManager.saveSession(session)
             }
 
         }

@@ -2,6 +2,7 @@ package com.team42.lightapp
 
 import android.content.Context
 import java.io.File
+import com.team42.lightapp.HardwareSystem
 
 
 object SessionManager
@@ -122,7 +123,7 @@ private fun parseFile(file : File, outSession : MutableList<SessionBlock>)
     }
 }
 
-fun SessionManager.saveSession(system: HardwareSystem, session: LightSession)
+fun SessionManager.saveSession(session: LightSession)
 {
 
     // Find specific file, create if it does not exist
@@ -133,7 +134,7 @@ fun SessionManager.saveSession(system: HardwareSystem, session: LightSession)
     }
 
     // Header info
-    file.writeText(system.sectionCount.toString() + "\n")
+    file.writeText(HardwareSystem.sectionCount.toString() + "\n")
 
     for(block in session.blocks)
     {

@@ -88,6 +88,24 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Set LED0 Test" />
+
+            <Button
+                android:id="@+id/saveTest"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Save Session Test" />
+
+            <Button
+                android:id="@+id/deleteSessionTest"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Delete all Saved Sessions" />
+
+            <Button
+                android:id="@+id/saveManyTest"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Save Many Sessions test" />
         </LinearLayout>
 
     </LinearLayout>

@@ -353,7 +353,7 @@ object HardwareSystem
 }
 
 class LightSession(
-    val name : String,
+    var name : String,
     val blocks : MutableList<SessionBlock> = mutableListOf()
 )
 

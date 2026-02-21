@@ -104,14 +104,13 @@ class HomeFragment : Fragment() {
                 }
 
                 brightnessSeek.setProgress(n, true)
+
+                // Send when updated
+                Send()
             }
 
             override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) { return }
-
-            // Send when updated
-            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
-                Send()
-            }
+            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) { return }
         })
 
         // Update Frequency
@@ -141,6 +140,9 @@ class HomeFragment : Fragment() {
                 }
 
                 frequencySeek.setProgress(n, true)
+
+                // Send when updated
+                Send()
             }
 
             override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) { return }
