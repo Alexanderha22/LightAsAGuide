@@ -50,7 +50,7 @@ void parse_data_task(void *arg) {
             }
             */
 
-            translate_sequence_package(data);
+            translate_command(data);
 
             // send command to appropriate task
             // translate led

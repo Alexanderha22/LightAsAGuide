@@ -61,6 +61,13 @@ void run_LED_sequence(void)
         printf("On Block Number: %d\n", currentBlock);
         printf("Going to next Time Stamp %f\n", nextTimeStamp);
 
+        //Go to next timestamp if not on last block
+        if (currentBlock < StoredSequence.M - 1)
+        {
+            //Update next timestamp
+            nextTimeStamp = StoredSequence.blocks[currentBlock + 1].TimeStamp;
+        }
+
         //Need to set LEDS
         //Loop through all light sections
         for (int lightNum = 0; lightNum < StoredSequence.N; lightNum++)
@@ -94,29 +101,48 @@ void run_LED_sequence(void)
             if (currentBlock < StoredSequence.M - 1)
             {
 
-                //Get next time stamp for future use
-                nextTimeStamp = StoredSequence.blocks[currentBlock + 1].TimeStamp;
+                printf("Passed not on last block\n");
 
                 float nextDuty = StoredSequence.blocks[currentBlock + 1].settings[lightNum].DutyCycle;
 
                 //Need to just set duty cycle first (no change / fade)
                 uint32_t duty = (pow(2, 13)) * (currDuty / 100);
+
+                printf("Updating Duty\n");
+
+                //Stop any lingering fade from previous block
+                ledc_stop(LEDC_MODE, LED_CHANNELS[lightNum], 0);
+
+
+
                 ledc_set_duty(LEDC_MODE, LED_CHANNELS[lightNum], duty);
+
+                printf("finished set_duty\n");
+
                 ledc_update_duty(LEDC_MODE, LED_CHANNELS[lightNum]);
+
+                printf("Done updating duty\n");
                 
                 //Check if need to fade (change in brightness between sections)
                 if (currDuty != nextDuty)
                 {
+
+                    printf("Starting fade calculation\n");
+
                     //Start fade to ramp to next brightness
-                    float nextTime = StoredSequence.blocks[currentBlock + 1].TimeStamp;
-                    float duration = nextTime - current_time;
+                    //float nextTime = StoredSequence.blocks[currentBlock + 1].TimeStamp;
+                    float duration = nextTimeStamp - (current_time - sequenceStartTime);
 
                     //Convert to millis
                     duration = duration * 1000;
 
+                    printf("Fade Duration (ms): %f\n", duration);
+
                     //Find duty cycle from percent provided
                     //Equation example: Set duty to 50%: (2 ** 13) * 50% = 4096
                     uint32_t duty = (pow(2, 13)) * (nextDuty / 100);
+
+                    printf("Setting fade\n");
 
                     //Starts fade
                     ledc_set_fade_with_time(LEDC_MODE, LED_CHANNELS[lightNum], duty, duration);
@@ -134,6 +160,14 @@ void run_LED_sequence(void)
                 uint32_t duty = (pow(2, 13)) * (currDuty / 100);
                 ledc_set_duty(LEDC_MODE, LED_CHANNELS[lightNum], duty);
                 ledc_update_duty(LEDC_MODE, LED_CHANNELS[lightNum]);
+
+                //Send SessionEnd to app
+                //bt_write("SessionEnd", 10);
+
+                //Go back to standby
+                GlobalState = STANDBY;
+
+                return;
             }
         }
 
@@ -361,7 +395,7 @@ void set_led_locations(void)
 
 }
 
-void translate_sequence_package(unsigned char* sequence)
+void translate_command(unsigned char* sequence)
 {
     //First check for commands with just one argument
     if (strcmp("GetInfo", (char*)sequence) == 0)
@@ -548,64 +582,75 @@ void translate_sequence_package(unsigned char* sequence)
             //Have LEDS reset
             turn_off_leds();
 
+            //Reset sequence data
+            init_sequence();
+
             //Set global state to begin sequence task
             GlobalState = SEQUENCE;
+
 
 
         }
         else if (strcmp("SetSection", (char*)command) == 0)
         {
-            //Convert command to c-style string
-            char SequenceString[strlen((char*)sequence) + 1];
-            strcpy(SequenceString, (char*)sequence);
-
-            //Goes to command
-            char* strPtr = strtok(SequenceString, ",");
-
-            //Stores command
-            StoredSequence.Command = malloc(strlen(strPtr) + 1);
-            strcpy(StoredSequence.Command, strPtr);
-
-            //Next goes to light number
-            strPtr = strtok(NULL, ",");
-            int lightNum = atoi(strPtr);
-
-            printf("Setting section number %i\n", lightNum);
-
-            //Next goes to brightness
-            strPtr = strtok(NULL, ",");
-            float givenDuty = atoi(strPtr);
-
-            //Set duty
-            
-            uint32_t duty = (pow(2, 13)) * (givenDuty / 100);
-            /*ledc_set_duty(LEDC_MODE, LED_CHANNELS[lightNum], duty);
-            ledc_update_duty(LEDC_MODE, LED_CHANNELS[lightNum]);*/
-            printf("Setting Brightness to %f\n", givenDuty); 
-
-            //Next goes to frequency
-            strPtr = strtok(NULL, ",");
-            float frequency = atoi(strPtr);
-
-            //Set if solid or off (doesnt need to be handled by task for flashing)
-            if (frequency == 0) //Solid
-            {   
-                printf("Setting LED to solid (0 frequency)\n");
-                ledc_set_freq(LEDC_MODE, LED_TIMERS[lightNum], 100);
-                ledc_set_duty(LEDC_MODE, LED_CHANNELS[lightNum], duty);
-                ledc_update_duty(LEDC_MODE, LED_CHANNELS[lightNum]);
-            }
-            else if (givenDuty == 0) //Off
+            //Check if currently in a sequence, if so, then send error 
+            if (GlobalState == SEQUENCE)
             {
-                ledc_set_duty(LEDC_MODE, LED_CHANNELS[lightNum], duty);
-                ledc_update_duty(LEDC_MODE, LED_CHANNELS[lightNum]);
+                bt_write("SendError, Stop current sequence before setting section.", 56);
             }
+            else //Set the section
+            {
+                //Convert command to c-style string
+                char SequenceString[strlen((char*)sequence) + 1];
+                strcpy(SequenceString, (char*)sequence);
 
-            //Updated LED settings
-            calculate_LED_settings(lightNum, duty, frequency);
+                //Goes to command
+                char* strPtr = strtok(SequenceString, ",");
 
-            //Update state
-            GlobalState = LIVE_CONTROL;
+                //Stores command
+                StoredSequence.Command = malloc(strlen(strPtr) + 1);
+                strcpy(StoredSequence.Command, strPtr);
+
+                //Next goes to light number
+                strPtr = strtok(NULL, ",");
+                int lightNum = atoi(strPtr);
+
+                printf("Setting section number %i\n", lightNum);
+
+                //Next goes to brightness
+                strPtr = strtok(NULL, ",");
+                float givenDuty = atoi(strPtr);
+
+                //Set duty
+                
+                uint32_t duty = (pow(2, 13)) * (givenDuty / 100);
+                /*ledc_set_duty(LEDC_MODE, LED_CHANNELS[lightNum], duty);
+                ledc_update_duty(LEDC_MODE, LED_CHANNELS[lightNum]);*/
+                printf("Setting Brightness to %f\n", givenDuty); 
+
+                //Next goes to frequency
+                strPtr = strtok(NULL, ",");
+                float frequency = atoi(strPtr);
+
+                //Set if solid or off (doesnt need to be handled by task for flashing)
+                if (frequency == 0) //Solid
+                {   
+                    printf("Setting LED to solid (0 frequency)\n");
+                    ledc_set_freq(LEDC_MODE, LED_TIMERS[lightNum], 100);
+                    ledc_set_duty(LEDC_MODE, LED_CHANNELS[lightNum], duty);
+                    ledc_update_duty(LEDC_MODE, LED_CHANNELS[lightNum]);
+                }
+                else if (givenDuty == 0) //Off
+                {
+                    ledc_set_duty(LEDC_MODE, LED_CHANNELS[lightNum], duty);
+                    ledc_update_duty(LEDC_MODE, LED_CHANNELS[lightNum]);
+                }
+
+                //Updated LED settings
+                calculate_LED_settings(lightNum, duty, frequency);
+
+            }
+            
         }
     }
 

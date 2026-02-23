@@ -104,7 +104,6 @@ typedef struct
 typedef enum
 {
     SEQUENCE,
-    LIVE_CONTROL,
     STANDBY
 } FSMState ;
 
@@ -166,7 +165,7 @@ void init_state(void);
 void set_led_locations(void);
 
 //Divide up sequencing information from Bluetooth to convert to frequency and duty cycle
-void translate_sequence_package(unsigned char* sequence);
+void translate_command(unsigned char* sequence);
 
 void turn_off_leds(void);
 

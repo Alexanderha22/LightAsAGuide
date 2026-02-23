@@ -21,7 +21,7 @@ void run_leds_task(void *arg)
             //Run the sequece
             run_LED_sequence();
         }
-        else if (GlobalState == LIVE_CONTROL)
+        else if (GlobalState == STANDBY)
         {
             //Loop for the LEDs to have independent frequency and PWM
             for (int i = 0; i < NUM_SECTIONS; i++)
@@ -46,6 +46,6 @@ void run_leds_task(void *arg)
             }
 
         }
-        vTaskDelay(1);
+        vTaskDelay(5);
     }
 }
