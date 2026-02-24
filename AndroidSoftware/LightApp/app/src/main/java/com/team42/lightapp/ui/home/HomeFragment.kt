@@ -2,6 +2,7 @@ package com.team42.lightapp.ui.home
 
 import android.hardware.lights.Light
 import android.os.Bundle
+import android.os.SystemClock
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
@@ -53,9 +54,20 @@ class HomeFragment : Fragment() {
         val frequencyNum: EditText = binding.homeEditFrequency
         val frequencySeek: SeekBar = binding.homeFrequencySeek
 
+        // Only send every 1000? ms
+        val minDeltaTime = 1000
+        var lastSendTime : Long = 0
+
         // Send data to hardware
         fun Send()
         {
+            val now = SystemClock.elapsedRealtime()
+            if(now < lastSendTime + minDeltaTime)
+            {
+                return
+            }
+            lastSendTime = now
+
             try {
                 if(switch.isChecked)
                 {
@@ -83,15 +95,14 @@ class HomeFragment : Fragment() {
         brightnessSeek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(bar: SeekBar?, progress: Int, fromUser: Boolean) {
                 brightnessNum.setText(progress.toString())
+                Send()
             }
 
             //Unused
             override fun onStartTrackingTouch(bar: SeekBar?) { return }
 
             // Send when done tracking
-            override fun onStopTrackingTouch(bar: SeekBar?) {
-                Send()
-            }
+            override fun onStopTrackingTouch(bar: SeekBar?) { return }
         })
 
         // Change brightness bar when number changes
@@ -104,9 +115,6 @@ class HomeFragment : Fragment() {
                 }
 
                 brightnessSeek.setProgress(n, true)
-
-                // Send when updated
-                Send()
             }
 
             override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) { return }
@@ -119,15 +127,14 @@ class HomeFragment : Fragment() {
         frequencySeek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(bar: SeekBar?, progress: Int, fromUser: Boolean) {
                 frequencyNum.setText(progress.toString())
+                Send()
             }
 
             //Unused
             override fun onStartTrackingTouch(bar: SeekBar?) { return }
 
             // Send when done tracking
-            override fun onStopTrackingTouch(bar: SeekBar?) {
-                Send()
-            }
+            override fun onStopTrackingTouch(bar: SeekBar?) { return }
         })
 
         // Change brightness bar when number changes
@@ -140,9 +147,6 @@ class HomeFragment : Fragment() {
                 }
 
                 frequencySeek.setProgress(n, true)
-
-                // Send when updated
-                Send()
             }
 
             override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) { return }

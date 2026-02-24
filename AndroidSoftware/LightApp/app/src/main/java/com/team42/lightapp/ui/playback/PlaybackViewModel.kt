@@ -4,11 +4,9 @@ import android.content.Context
 import android.widget.Button
 import android.widget.TableLayout
 import android.widget.TableRow
+import android.widget.TextView
 import android.widget.Toast
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.google.android.material.tabs.TabLayout.Tab
 import com.team42.lightapp.HardwareSystem
 import com.team42.lightapp.SessionManager
 import com.team42.lightapp.getSession
@@ -56,6 +54,20 @@ class PlaybackViewModel : ViewModel() {
 
             rowView.addView(button)
         }
+
+        // No saved Sessions
+        if(sessionList.isEmpty())
+        {
+            val textbox = TextView(context)
+            val string = "No Saved Sessions"
+            textbox.text = string
+
+            val rowView = TableRow(context)
+            layout.addView(rowView)
+
+            rowView.addView(textbox)
+        }
+
 
     }
 

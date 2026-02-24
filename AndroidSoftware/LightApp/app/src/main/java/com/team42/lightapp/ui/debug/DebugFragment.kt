@@ -3,12 +3,9 @@ package com.team42.lightapp.ui.debug
 
 import android.Manifest
 import android.app.Activity
-import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.se.omapi.Session
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -25,7 +22,6 @@ import com.team42.lightapp.R
 import com.team42.lightapp.SessionBlock
 import com.team42.lightapp.SessionManager
 import com.team42.lightapp.deleteSession
-import com.team42.lightapp.getSession
 import com.team42.lightapp.getSessionList
 import com.team42.lightapp.saveSession
 import java.time.LocalDateTime
@@ -163,7 +159,7 @@ class DebugFragment : Fragment() {
         }
         rootView.findViewById<Button>(R.id.sectionTest).setOnClickListener{
             try {
-                val ls : LightSource = LightSource(50.0, 10.0)
+                val ls = LightSource(50.0, 10.0)
                 HardwareSystem.uC_SetSection(3,ls)
             }
             catch (err : NullPointerException)
