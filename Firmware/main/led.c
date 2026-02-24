@@ -57,16 +57,25 @@ void run_LED_sequence(void)
     if (currentTimeStamp <= current_time - sequenceStartTime) //See if enough time from start of sequence has passed
     {     
 
-        printf("Current Time Stamp: %f\n", currentTimeStamp);
-        printf("On Block Number: %d\n", currentBlock);
-        printf("Going to next Time Stamp %f\n", nextTimeStamp);
-
         //Go to next timestamp if not on last block
         if (currentBlock < StoredSequence.M - 1)
         {
             //Update next timestamp
             nextTimeStamp = StoredSequence.blocks[currentBlock + 1].TimeStamp;
         }
+
+
+        printf("Current Time Stamp: %f\n", currentTimeStamp);
+        printf("On Block Number: %d\n", currentBlock);
+        printf("Going to next Time Stamp %f\n", nextTimeStamp);
+
+
+        
+        //Stop any lingering fade from previous block
+        ledc_stop(LEDC_MODE, LED_CHANNELS[0], 0);
+        ledc_stop(LEDC_MODE, LED_CHANNELS[1], 0);
+        ledc_stop(LEDC_MODE, LED_CHANNELS[2], 0);
+        ledc_stop(LEDC_MODE, LED_CHANNELS[3], 0);
 
         //Need to set LEDS
         //Loop through all light sections
@@ -97,6 +106,9 @@ void run_LED_sequence(void)
             
             printf("Setting light %i frequency\n", lightNum);
 
+            //Delay before doing duty
+            //vTaskDelay(1);
+
             //Ramp LED if there is another value to go to (not on last block)
             if (currentBlock < StoredSequence.M - 1)
             {
@@ -110,8 +122,14 @@ void run_LED_sequence(void)
 
                 printf("Updating Duty\n");
 
-                //Stop any lingering fade from previous block
-                ledc_stop(LEDC_MODE, LED_CHANNELS[lightNum], 0);
+
+                printf("Setting duty to %" PRIu32 "\n", duty);
+
+
+                //DEBUG
+                /* printf("Calling set_duty on ch: %d\n", LED_CHANNELS[lightNum]);
+                esp_err_t err = ledc_set_duty(LEDC_MODE, LED_CHANNELS[lightNum], duty);
+                printf("set_duty returned %d\n", err); */
 
 
 
@@ -145,8 +163,8 @@ void run_LED_sequence(void)
                     printf("Setting fade\n");
 
                     //Starts fade
-                    ledc_set_fade_with_time(LEDC_MODE, LED_CHANNELS[lightNum], duty, duration);
-                    ledc_fade_start(LEDC_MODE, LED_CHANNELS[lightNum], LEDC_FADE_NO_WAIT);
+                    //ledc_set_fade_with_time(LEDC_MODE, LED_CHANNELS[lightNum], duty, duration);
+                    //ledc_fade_start(LEDC_MODE, LED_CHANNELS[lightNum], LEDC_FADE_NO_WAIT);
                 }
 
                 printf("Setting light %i brightness\n", lightNum);

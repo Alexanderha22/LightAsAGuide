@@ -46,6 +46,6 @@ void run_leds_task(void *arg)
             }
 
         }
-        vTaskDelay(5);
+        vTaskDelay(1);
     }
 }
