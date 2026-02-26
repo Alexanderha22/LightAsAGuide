@@ -7,7 +7,9 @@ import android.graphics.Paint
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.OvalShape
 import android.util.AttributeSet
+import android.view.MotionEvent
 import android.view.View
+import androidx.constraintlayout.widget.ConstraintSet
 
 class CanvasView(context: Context) : View(context) {
     val mainPaint : Paint = Paint()
@@ -19,10 +21,20 @@ class CanvasView(context: Context) : View(context) {
     fun updateLights() {
 
     }
+    
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        val x : Float = event.x
+        val y : Float = event.y
 
-    override fun setOnClickListener(l: OnClickListener?) {
-        super.setOnClickListener(l)
+        if(event.action == MotionEvent.ACTION_DOWN) {
+            //TODO: Look through all lights and see what intersects
+            //TODO: (De)activate lights that are touched
 
+            //TODO: Remove when above is implemented
+            mainPaint.color = if (mainPaint.color == Color.BLUE) Color.GREEN else Color.BLUE
+            invalidate()
+        }
+        return true
     }
 
     override fun onDraw(canvas: Canvas) {
