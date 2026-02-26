@@ -153,6 +153,7 @@ object HardwareSystem
             throw Exception("Index cannot be greater than section count")
 
         btThread!!.write("SetSection,${index},${source.brightness},${source.frequency}".toByteArray())
+        
     }
     fun uC_GetInfo()
     {

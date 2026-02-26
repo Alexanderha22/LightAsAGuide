@@ -55,7 +55,7 @@ class HomeFragment : Fragment() {
         val frequencySeek: SeekBar = binding.homeFrequencySeek
 
         // Only send every 1000? ms
-        val minDeltaTime = 1000
+        val minDeltaTime = 10
         var lastSendTime : Long = 0
 
         // Send data to hardware
@@ -71,7 +71,10 @@ class HomeFragment : Fragment() {
             try {
                 if(switch.isChecked)
                 {
-                    val ls : LightSource = LightSource(brightnessSeek.progress.toDouble(), frequencySeek.progress.toDouble())
+                    val ls : LightSource = LightSource(
+                        brightnessSeek.progress.toDouble() / 10.0,
+                        frequencySeek.progress.toDouble() / 100.0)
+
                     HardwareSystem.uC_SetSection(currentIndex, ls)
                 }
                 else {
@@ -88,13 +91,17 @@ class HomeFragment : Fragment() {
             }
         }
 
+        switch.setOnClickListener{
+            Send()
+        }
+
 
         // Update Brightness
 
         // Change number when brightness bar changes
         brightnessSeek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(bar: SeekBar?, progress: Int, fromUser: Boolean) {
-                brightnessNum.setText(progress.toString())
+                brightnessNum.setText((progress / 10.0).toString())
                 Send()
             }
 
@@ -109,7 +116,7 @@ class HomeFragment : Fragment() {
         brightnessNum.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(editable: Editable?) {;
                 val n: Int = try {
-                    editable.toString().toInt();
+                    (editable.toString().toDouble() * 10.0).toInt()
                 } catch(e : NumberFormatException) {
                     brightnessSeek.progress
                 }
@@ -126,7 +133,7 @@ class HomeFragment : Fragment() {
         // Change number when brightness bar changes
         frequencySeek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(bar: SeekBar?, progress: Int, fromUser: Boolean) {
-                frequencyNum.setText(progress.toString())
+                frequencyNum.setText((progress / 100.0).toString())
                 Send()
             }
 
@@ -137,11 +144,11 @@ class HomeFragment : Fragment() {
             override fun onStopTrackingTouch(bar: SeekBar?) { return }
         })
 
-        // Change brightness bar when number changes
+        // Change frequency  bar when number changes
         frequencyNum.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(editable: Editable?) {
                 val n: Int = try {
-                    editable.toString().toInt()
+                    (editable.toString().toDouble() * 100).toInt()
                 } catch(e : NumberFormatException) {
                     frequencySeek.progress
                 }

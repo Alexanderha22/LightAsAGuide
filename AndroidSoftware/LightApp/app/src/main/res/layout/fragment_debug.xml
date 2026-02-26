@@ -87,7 +87,7 @@
                 android:id="@+id/sectionTest"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Set LED0 Test" />
+                android:text="Set LED3 Test" />
 
             <Button
                 android:id="@+id/saveTest"
