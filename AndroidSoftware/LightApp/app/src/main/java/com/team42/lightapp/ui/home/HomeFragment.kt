@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.SeekBar
 import android.widget.Switch
 import androidx.core.widget.addTextChangedListener
@@ -17,9 +18,9 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.team42.lightapp.HardwareSystem
 import com.team42.lightapp.databinding.FragmentHomeBinding
-
 import com.team42.lightapp.LightSource
 import android.widget.Toast
+import com.team42.lightapp.CanvasView
 
 class HomeFragment : Fragment() {
 
@@ -45,6 +46,11 @@ class HomeFragment : Fragment() {
 
         // ON OFF
         val switch: Switch = binding.homeSwitchStatus
+
+        // LED MAP
+        val mapLayout : FrameLayout = binding.homeLightDrawable
+        val mapCanvasView : CanvasView = CanvasView(requireContext())
+        mapLayout.addView(mapCanvasView)
 
         // BRIGHTNESS
         val brightnessNum: EditText = binding.homeEditBrightness
@@ -75,8 +81,7 @@ class HomeFragment : Fragment() {
                     HardwareSystem.uC_SetSection(currentIndex, ls)
                 }
                 else {
-                    val ls : LightSource = LightSource(0.0,0.0)
-                    HardwareSystem.uC_SetSection(currentIndex, ls)
+                    HardwareSystem.uC_StopAll()
                 }
             }
             catch (e: Exception) {
