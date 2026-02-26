@@ -213,16 +213,13 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
 
         const char *msg = "Data received\r\n";
         esp_spp_write(param->data_ind.handle, strlen(msg), (uint8_t *)msg);
-
+        ESP_LOGW(SPP_TAG, "data sent to ring buffer: %s", param->data_ind.data);
         // defer processing to data handler task w/ ring buffer
         BaseType_t res = xRingbufferSend(rx_rb, param->data_ind.data, param->data_ind.len, pdMS_TO_TICKS( 10 ));
         if (res != pdTRUE) {
-            ESP_LOGE(SPP_TAG, "Failed to send item\n");
-            msg = "Failed to send data to ring buffer\r\n";
-            esp_spp_write(param->data_ind.handle, strlen(msg), (uint8_t *)msg);
+            ESP_LOGE(SPP_TAG, "Failed to send item \n");
         } else {
-            msg = "Sent data to ring buffer successfully\r\n";
-            esp_spp_write(param->data_ind.handle, strlen(msg), (uint8_t *)msg);
+            ESP_LOGW(SPP_TAG, "Sent data to ring buffer successfully\r\n");
         }
         break;
     case ESP_SPP_CONG_EVT: // bluetooth stack is backed up (error)

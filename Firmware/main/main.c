@@ -38,7 +38,7 @@ void app_main(void)
     /////////////////////////////////////////////
 
     RingbufHandle_t rb =
-        xRingbufferCreate(1024, RINGBUF_TYPE_BYTEBUF);
+        xRingbufferCreate(4096, RINGBUF_TYPE_NOSPLIT);
     assert(rb);
 
     init_leds();

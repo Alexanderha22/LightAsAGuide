@@ -30,6 +30,7 @@ void parse_data_task(void *arg) {
         unsigned char *data = (unsigned char *)xRingbufferReceive(rb, &size, block_time);
         
         if(data) {
+            ESP_LOGW(PARSE_TAG, "data received from ring buffer: %s", data);
             // parse
             /*
             ESP_LOGI(PARSE_TAG, "Chunk %d bytes", size);

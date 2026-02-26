@@ -111,7 +111,7 @@ void run_LED_sequence(void)
                 printf("Updating Duty\n");
 
                 //Stop any lingering fade from previous block
-                ledc_stop(LEDC_MODE, LED_CHANNELS[lightNum], 0);
+                //ledc_stop(LEDC_MODE, LED_CHANNELS[lightNum], 0);
 
 
 
@@ -145,8 +145,8 @@ void run_LED_sequence(void)
                     printf("Setting fade\n");
 
                     //Starts fade
-                    ledc_set_fade_with_time(LEDC_MODE, LED_CHANNELS[lightNum], duty, duration);
-                    ledc_fade_start(LEDC_MODE, LED_CHANNELS[lightNum], LEDC_FADE_NO_WAIT);
+                    //ledc_set_fade_with_time(LEDC_MODE, LED_CHANNELS[lightNum], duty, duration);
+                    //ledc_fade_start(LEDC_MODE, LED_CHANNELS[lightNum], LEDC_FADE_NO_WAIT);
                 }
 
                 printf("Setting light %i brightness\n", lightNum);
@@ -162,7 +162,9 @@ void run_LED_sequence(void)
                 ledc_update_duty(LEDC_MODE, LED_CHANNELS[lightNum]);
 
                 //Send SessionEnd to app
-                //bt_write("SessionEnd", 10);
+                bt_write("SessionEnd", 10);
+
+                printf("Session ended\n");
 
                 //Go back to standby
                 GlobalState = STANDBY;
@@ -397,6 +399,17 @@ void set_led_locations(void)
 
 void translate_command(unsigned char* sequence)
 {
+
+    //Check if input even exists
+    if (sequence == NULL)
+    {
+        bt_write("Error: No Command", 17);
+        printf("ERROR: Received NULL from command\n");
+        return;
+    }
+
+
+
     //First check for commands with just one argument
     if (strcmp("GetInfo", (char*)sequence) == 0)
     {
@@ -503,8 +516,8 @@ void translate_command(unsigned char* sequence)
             char* strPtr = strtok(firstLine, ",");
             
             //First is command, store
-            StoredSequence.Command = malloc(strlen(strPtr) + 1);
-            strcpy(StoredSequence.Command, strPtr);
+            //StoredSequence.Command = malloc(strlen(strPtr) + 1);
+            //strcpy(StoredSequence.Command, strPtr);
 
             //Move to next one
             strPtr = strtok(NULL, ",");
@@ -597,6 +610,7 @@ void translate_command(unsigned char* sequence)
             if (GlobalState == SEQUENCE)
             {
                 bt_write("SendError, Stop current sequence before setting section.", 56);
+                printf("Tried to set section when sequence was running\n");
             }
             else //Set the section
             {
@@ -604,22 +618,49 @@ void translate_command(unsigned char* sequence)
                 char SequenceString[strlen((char*)sequence) + 1];
                 strcpy(SequenceString, (char*)sequence);
 
+                printf("SequenceString: %s\n", SequenceString);
+                printf("original sequence: %s\n", (char*)sequence);
+
                 //Goes to command
                 char* strPtr = strtok(SequenceString, ",");
 
+                printf("StrPtr: %s\n", strPtr);
+
+                if (strPtr == NULL)
+                {
+                    printf("ERROR NULL strtok\n");
+                    return;
+                }
+
                 //Stores command
-                StoredSequence.Command = malloc(strlen(strPtr) + 1);
-                strcpy(StoredSequence.Command, strPtr);
+                //StoredSequence.Command = malloc(strlen(strPtr) + 1);
+                //strcpy(StoredSequence.Command, strPtr);
 
                 //Next goes to light number
                 strPtr = strtok(NULL, ",");
+
+                printf("StrPtr: %s\n", strPtr);
+
+                if (strPtr == NULL)
+                {
+                    printf("ERROR NULL strtok\n");
+                }
+
                 int lightNum = atoi(strPtr);
 
                 printf("Setting section number %i\n", lightNum);
 
                 //Next goes to brightness
                 strPtr = strtok(NULL, ",");
-                float givenDuty = atoi(strPtr);
+
+                printf("StrPtr: %s\n", strPtr);
+
+                if (strPtr == NULL)
+                {
+                    printf("ERROR NULL strtok\n");
+                }
+
+                float givenDuty = atof(strPtr);
 
                 //Set duty
                 
@@ -630,7 +671,19 @@ void translate_command(unsigned char* sequence)
 
                 //Next goes to frequency
                 strPtr = strtok(NULL, ",");
-                float frequency = atoi(strPtr);
+
+                printf("StrPtr: %s\n", strPtr);
+
+                if (strPtr == NULL)
+                {
+                    printf("ERROR NULL strtok\n");
+                    printf("Original sequence: %s\n", (char*)sequence);
+                }
+
+                float frequency = atof(strPtr);
+
+                
+                printf("Setting Frequency to %f\n", frequency);
 
                 //Set if solid or off (doesnt need to be handled by task for flashing)
                 if (frequency == 0) //Solid
@@ -667,7 +720,11 @@ void turn_off_leds(void)
     {
         ledc_set_duty(LEDC_MODE, LED_CHANNELS[i], 0);
         ledc_update_duty(LEDC_MODE, LED_CHANNELS[i]);
-        ledc_set_freq(LEDC_MODE, LED_TIMERS[i], 100);
+        ledc_set_freq(LEDC_MODE, LED_TIMERS[i], 1000);
+
+        calculate_LED_settings(i, 0, 0);
+
+
 
     }
 
