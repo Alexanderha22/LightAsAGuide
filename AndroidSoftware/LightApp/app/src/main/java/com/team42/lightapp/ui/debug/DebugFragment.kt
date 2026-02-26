@@ -16,6 +16,7 @@ import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.team42.lightapp.HardwareSystem
+import com.team42.lightapp.LEDInfo
 import com.team42.lightapp.LightSession
 import com.team42.lightapp.LightSource
 import com.team42.lightapp.R
@@ -246,6 +247,32 @@ class DebugFragment : Fragment() {
                 SessionManager.saveSession(session)
             }
 
+        }
+        rootView.findViewById<Button>(R.id.fillLEDListTest).setOnClickListener{
+            // Generate the list of leds
+            //TODO: Remove when GetInfo works
+
+            HardwareSystem.sectionCount = 4
+
+            HardwareSystem.ledList.add(LEDInfo(14, 14, 0))
+            HardwareSystem.ledList.add(LEDInfo(14, -14, 0))
+            HardwareSystem.ledList.add(LEDInfo(-14, -14, 0))
+            HardwareSystem.ledList.add(LEDInfo(-14, 14, 0))
+
+            HardwareSystem.ledList.add(LEDInfo(50, 0, 1))
+            HardwareSystem.ledList.add(LEDInfo(0, 50, 1))
+            HardwareSystem.ledList.add(LEDInfo(-50, 0, 1))
+            HardwareSystem.ledList.add(LEDInfo(0, -50, 1))
+
+            HardwareSystem.ledList.add(LEDInfo(-63, 63, 2))
+            HardwareSystem.ledList.add(LEDInfo(63, -63, 2))
+            HardwareSystem.ledList.add(LEDInfo(-63, -63, 2))
+            HardwareSystem.ledList.add(LEDInfo(63, 63, 2))
+
+            HardwareSystem.ledList.add(LEDInfo(89, 0, 3))
+            HardwareSystem.ledList.add(LEDInfo(0, 89, 3))
+            HardwareSystem.ledList.add(LEDInfo(-89, 0, 3))
+            HardwareSystem.ledList.add(LEDInfo(0, -89, 3))
         }
 
         return rootView
