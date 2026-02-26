@@ -142,6 +142,7 @@ object HardwareSystem
     fun uC_StopAll()
     {
         btThread!!.write("StopAll".toByteArray())
+        state = HardwareState.IDLE
     }
     fun uC_SetSection(index : Int, source : LightSource)
     {

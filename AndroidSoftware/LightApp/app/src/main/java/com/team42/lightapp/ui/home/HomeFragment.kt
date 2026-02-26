@@ -61,7 +61,7 @@ class HomeFragment : Fragment() {
         val frequencySeek: SeekBar = binding.homeFrequencySeek
 
         // Only send every 1000? ms
-        val minDeltaTime = 10
+        val minDeltaTime = 100
         var lastSendTime : Long = 0
 
         // Send data to hardware
