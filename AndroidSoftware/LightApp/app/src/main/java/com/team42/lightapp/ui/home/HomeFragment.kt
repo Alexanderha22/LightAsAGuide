@@ -36,6 +36,10 @@ class HomeFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
 
+        // DEBUG SECTION COUNT
+        HardwareSystem.sectionCount = 4
+        // DEBUG SECTION COUNT
+
         val homeViewModel =
             ViewModelProvider(this).get(HomeViewModel::class.java)
 
