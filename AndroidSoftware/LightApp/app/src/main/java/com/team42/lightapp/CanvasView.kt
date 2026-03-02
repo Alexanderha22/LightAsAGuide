@@ -9,6 +9,10 @@ import android.view.MotionEvent
 import android.view.View
 import com.team42.lightapp.HardwareSystem
 
+// Colors for the groups to pick from (based on index)
+val GROUP_COLORS : Array<Int> = arrayOf(Color.YELLOW, Color.BLUE, Color.MAGENTA, Color.RED,
+                                        Color.GREEN, Color.GRAY, Color.DKGRAY)
+
 class CanvasLight {
     var x : Float = 0.0f
     var y : Float = 0.0f
@@ -20,17 +24,16 @@ class CanvasLightGroup {
     var name : String = "No Name"
     var lightList : MutableList<CanvasLight> = mutableListOf()
     var isActive : Boolean = false
+    var paint : Paint = Paint()
 }
 
 class CanvasView(context: Context) : View(context) {
     private val mainPaint : Paint = Paint()
-    private val selectedPaint : Paint = Paint()
 
     val lightGroups : MutableList<CanvasLightGroup> = mutableListOf()
 
     init {
-        mainPaint.setColor(Color.BLACK)
-        selectedPaint.setColor(Color.MAGENTA)
+        mainPaint.color = Color.BLACK
     }
 
     fun updateLights() {
@@ -58,6 +61,7 @@ class CanvasView(context: Context) : View(context) {
                 group = CanvasLightGroup()
                 group.id = light.section
                 group.name = "Group ${group.id}"
+                group.paint.color = GROUP_COLORS[group.id]
 
                 // Add groups until the index is found
                 while(lightGroups.size < group.id)
@@ -65,6 +69,7 @@ class CanvasView(context: Context) : View(context) {
                     val temp : CanvasLightGroup = CanvasLightGroup()
                     temp.id = lightGroups.size
                     temp.name = "NULL"
+                    temp.paint.color = GROUP_COLORS[temp.id]
 
                     lightGroups.add(temp)
                 }
@@ -108,16 +113,18 @@ class CanvasView(context: Context) : View(context) {
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
+        canvas.drawARGB(0xFF, 0xEB, 0xC7, 0xB2)
+
         // Function to draw lights
-        fun drawLight(light : CanvasLight, isSelected : Boolean = false) {
-            val paint = if (isSelected) selectedPaint else mainPaint
-            canvas.drawCircle(light.x, light.y, light.r, paint)
+        fun drawLight(light : CanvasLight, paint : Paint, isSelected : Boolean = false) {
+            val newPaint = if (isSelected) paint else mainPaint
+            canvas.drawCircle(light.x, light.y, light.r, newPaint)
         }
 
         //Draw all the lights on the screen
         for(group in lightGroups) {
             for(light in group.lightList)
-                drawLight(light, group.isActive)
+                drawLight(light, group.paint, group.isActive)
         }
     }
 }
