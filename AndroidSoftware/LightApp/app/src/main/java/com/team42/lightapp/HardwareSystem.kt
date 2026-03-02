@@ -150,7 +150,7 @@ object HardwareSystem
         if(HardwareSystem.state == HardwareSystem.HardwareState.RUNNING)
             throw Exception("Device currently running session")
 
-        if(index < sectionCount)
+        if(index >= sectionCount)
             throw Exception("Index cannot be greater than section count")
 
         btThread!!.write("SetSection,${index},${source.brightness},${source.frequency}".toByteArray())
