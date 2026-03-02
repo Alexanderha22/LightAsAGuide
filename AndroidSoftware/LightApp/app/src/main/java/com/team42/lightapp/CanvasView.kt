@@ -23,8 +23,8 @@ class CanvasLightGroup {
 }
 
 class CanvasView(context: Context) : View(context) {
-    val mainPaint : Paint = Paint()
-    val selectedPaint : Paint = Paint()
+    private val mainPaint : Paint = Paint()
+    private val selectedPaint : Paint = Paint()
 
     val lightGroups : MutableList<CanvasLightGroup> = mutableListOf()
 
@@ -116,7 +116,6 @@ class CanvasView(context: Context) : View(context) {
 
         //Draw all the lights on the screen
         for(group in lightGroups) {
-            Log.d(null, "Group \"${group.name}\" active? ${group.isActive}")
             for(light in group.lightList)
                 drawLight(light, group.isActive)
         }

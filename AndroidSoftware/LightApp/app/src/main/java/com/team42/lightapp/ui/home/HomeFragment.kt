@@ -46,8 +46,6 @@ class HomeFragment : Fragment() {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        var currentIndex = 0
-
         // ON OFF
         val switch: Switch = binding.homeSwitchStatus
 
@@ -86,7 +84,9 @@ class HomeFragment : Fragment() {
                         brightnessSeek.progress.toDouble() / 10.0,
                         frequencySeek.progress.toDouble() / 100.0)
 
-                    HardwareSystem.uC_SetSection(currentIndex, ls)
+                    for(group in mapCanvasView.lightGroups)
+                        if(group.isActive)
+                            HardwareSystem.uC_SetSection(group.id, ls)
                 }
                 else {
                     HardwareSystem.uC_StopAll()
