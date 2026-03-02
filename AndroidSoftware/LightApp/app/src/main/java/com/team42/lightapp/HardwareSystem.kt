@@ -19,6 +19,7 @@ import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.UUID
+import kotlin.math.pow
 
 const val MESSAGE_READ: Int = 0
 const val MESSAGE_WRITE: Int = 1
@@ -153,7 +154,10 @@ object HardwareSystem
         if(index >= sectionCount)
             throw Exception("Index cannot be greater than section count")
 
-        btThread!!.write("SetSection,${index},${source.brightness},${source.frequency}".toByteArray())
+        // Convert to perceived brightness (gamma curve)
+        val adjustedBrightness = (source.brightness / 100.0).pow(2.2) * 100.0
+
+        btThread!!.write("SetSection,${index},${adjustedBrightness},${source.frequency}".toByteArray())
         
     }
     fun uC_GetInfo()
