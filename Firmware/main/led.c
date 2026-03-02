@@ -1,11 +1,11 @@
 #include "led.h"
 #include "bluedroid_spp.h"
 
+//Global arrays to access all LED sections
 uint32_t LED_GPIO[] = {LEDC0_OUTPUT_IO, LEDC1_OUTPUT_IO, LEDC2_OUTPUT_IO, LEDC3_OUTPUT_IO};
 ledc_timer_t LED_TIMERS[] = {LEDC0_TIMER, LEDC1_TIMER, LEDC2_TIMER, LEDC3_TIMER};
 ledc_channel_t LED_CHANNELS[] = {LEDC0_CHANNEL, LEDC1_CHANNEL, LEDC2_CHANNEL, LEDC3_CHANNEL};
 
-Sequence StoredSequence;
 
 //Global variables
 Sequence StoredSequence;
@@ -14,7 +14,6 @@ float currentTimeStamp;
 float nextTimeStamp;
 float sequenceStartTime;
 int sequenceStarted;
-int sequenceComplete;
 FSMState GlobalState;
 
 //LED setting variables
@@ -41,15 +40,31 @@ void init_sequence(void)
     nextTimeStamp = StoredSequence.blocks[currentBlock + 1].TimeStamp;
 
     sequenceStarted = 1;
-    sequenceComplete = 0;
 
 
+}
+
+
+void reset_sequence(void)
+{
+
+    //Free space from malloc
+
+
+    for (int i = 0; i < StoredSequence.M; i++)
+    {
+        free(StoredSequence.blocks[i].settings);
+    }
+
+    free(StoredSequence.blocks);
+    
+    
 }
 
 void run_LED_sequence(void)
 {
 
-    //Check what time on timer 
+    //Check what the current time is on timer 
     float current_time = get_current_time();
 
     printf("Current Time: %f\n", current_time);
@@ -59,14 +74,31 @@ void run_LED_sequence(void)
 
         printf("Current Time Stamp: %f\n", currentTimeStamp);
         printf("On Block Number: %d\n", currentBlock);
-        printf("Going to next Time Stamp %f\n", nextTimeStamp);
 
         //Go to next timestamp if not on last block
         if (currentBlock < StoredSequence.M - 1)
         {
             //Update next timestamp
             nextTimeStamp = StoredSequence.blocks[currentBlock + 1].TimeStamp;
+            printf("Going to next Time Stamp %f\n", nextTimeStamp);
         }
+        else //On last block
+        {
+            //Turn off all LEDS and finish sequnece
+            turn_off_leds();
+            reset_sequence();
+            init_sequence();
+            GlobalState = STANDBY;
+
+            //Send SessionEnd to app
+            bt_write("SessionEnd", 10);
+            printf("Session ended\n");
+
+            return;
+
+        }
+
+
 
         //Need to set LEDS
         //Loop through all light sections
@@ -151,28 +183,8 @@ void run_LED_sequence(void)
 
                 printf("Setting light %i brightness\n", lightNum);
             }
-            else
-            {
-                //On last block
-                sequenceComplete = 1;
 
-                //Set current duty cycle
-                uint32_t duty = (pow(2, 13)) * (currDuty / 100);
-                ledc_set_duty(LEDC_MODE, LED_CHANNELS[lightNum], duty);
-                ledc_update_duty(LEDC_MODE, LED_CHANNELS[lightNum]);
-
-                //Send SessionEnd to app
-                bt_write("SessionEnd", 10);
-
-                printf("Session ended\n");
-
-                //Go back to standby
-                GlobalState = STANDBY;
-
-                return;
-            }
         }
-
 
         //Go to next block
         currentTimeStamp = nextTimeStamp;
@@ -515,9 +527,8 @@ void translate_command(unsigned char* sequence)
             //Parse 3 times to split command, M, and N
             char* strPtr = strtok(firstLine, ",");
             
-            //First is command, store
-            //StoredSequence.Command = malloc(strlen(strPtr) + 1);
-            //strcpy(StoredSequence.Command, strPtr);
+            //First is command
+            
 
             //Move to next one
             strPtr = strtok(NULL, ",");
@@ -543,13 +554,13 @@ void translate_command(unsigned char* sequence)
             int blockNum = 0;
 
             //Array to hold all the blocks as strings
-            char blockStrings[StoredSequence.M][((StoredSequence.N * 2) + 1) * 8];
+            char** blockStrings = malloc(StoredSequence.M * sizeof(char*));
 
-            //Collects all the blocks as strings
-            while(strPtr != NULL)
+            //Collects all the blocks as strings until all blocks 
+            while(strPtr != NULL && blockNum < StoredSequence.M)
             {
 
-                strcpy(blockStrings[blockNum], strPtr);
+                blockStrings[blockNum] = strdup(strPtr);
 
                 //Move to next block
                 strPtr = strtok(NULL, "\n");
@@ -559,17 +570,32 @@ void translate_command(unsigned char* sequence)
             
             }
 
+            //Check if provided lines matches up with given M
+            if (blockNum != StoredSequence.M)
+            {
+                printf("Mismatch in sequence lines and block number\n");
+                return;
+            }
+
             //Need to allocate space for block array in stored sequence
             StoredSequence.blocks = malloc(StoredSequence.M * sizeof(Block));
 
-            //Need to loop through all blocks
+            //Need to loop through all blocks to parse each one
             for (int i = 0; i < StoredSequence.M; i++)
             {
-                char blockString[strlen(blockStrings[i]) + 1];
-                strcpy(blockString, blockStrings[i]);
+                //char blockString[strlen(blockStrings[i]) + 1];
+                char* blockString = strdup(blockStrings[i]);
+
+
+
 
                 //Need to parse the blockstring by , to get timestamp and settings
                 char* blockPtr = strtok(blockString, ",");
+
+                if (!blockPtr)
+                {
+                    printf("NULL for blockptr1\n");
+                }
 
                 //First is the time stamp, need to store
                 StoredSequence.blocks[i].TimeStamp = atof(blockPtr);
@@ -581,13 +607,36 @@ void translate_command(unsigned char* sequence)
                 {
                     //Next parse is setting for brightness
                     blockPtr = strtok(NULL, ",");
+
+                    if (!blockPtr)
+                    {
+                        printf("NULL for blockptr2, i = %i\n", i);
+                    }
+
                     StoredSequence.blocks[i].settings[j].DutyCycle = atof(blockPtr);
 
                     //Next parse is setting for frequency
                     blockPtr = strtok(NULL, ",");
+
+                    if (!blockPtr)
+                    {
+                        printf("NULL for blockptr3, i = %i\n", i);
+                    }
+
                     StoredSequence.blocks[i].settings[j].Frequency = atof(blockPtr);
                 }
+
+                //Free from the malloc within calling strdup
+                free(blockString);
+
             }
+
+            //Free all strings allocated with strdup
+            for (int i = 0; i < StoredSequence.M; i++)
+            {
+                free(blockStrings[i]);
+            }
+            free(blockStrings);
 
             //Save what time this command was recieved (start time)
             sequenceStartTime = get_current_time();
@@ -595,7 +644,7 @@ void translate_command(unsigned char* sequence)
             //Have LEDS reset
             turn_off_leds();
 
-            //Reset sequence data
+            //Initializes sequence data
             init_sequence();
 
             //Set global state to begin sequence task
@@ -632,9 +681,6 @@ void translate_command(unsigned char* sequence)
                     return;
                 }
 
-                //Stores command
-                //StoredSequence.Command = malloc(strlen(strPtr) + 1);
-                //strcpy(StoredSequence.Command, strPtr);
 
                 //Next goes to light number
                 strPtr = strtok(NULL, ",");
@@ -723,8 +769,6 @@ void turn_off_leds(void)
         ledc_set_freq(LEDC_MODE, LED_TIMERS[i], 1000);
 
         calculate_LED_settings(i, 0, 0);
-
-
 
     }
 

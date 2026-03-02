@@ -50,8 +50,6 @@
 #define LEDC_MODE               LEDC_LOW_SPEED_MODE
 #define LEDC_DUTY_RES           LEDC_TIMER_13_BIT // Set duty resolution to 13 bits
 
-#define MAX_SEQUENCE_LENGTH     1000
-#define MAX_FREQUENCY           100
 
 //HARDWARE SPECIFIC PARAMETERS:
 #define NUM_LIGHTS              16 //Number of lights for this specific hardware
@@ -84,7 +82,6 @@ typedef struct
 
 typedef struct
 {
-    char* Command;
     int M;
     int N;
     Block* blocks; //Will be M number of entries for each block
@@ -126,8 +123,6 @@ extern LEDSettings Section3Settings;
 extern LEDSettings* LED_SETTINGS[4];
 
 
-
-
 //Timer Setup
 static gptimer_handle_t gptimer = NULL;
 static gptimer_config_t timer_config = {
@@ -136,12 +131,16 @@ static gptimer_config_t timer_config = {
     .resolution_hz = 1 * 1000 * 1000,   // Resolution is 1 MHz, i.e., 1 tick equals 1 microsecond
 };
 
+
+//Loop in order to run the loaded sequence
 void run_LED_sequence(void);
 
 
 //Initializes sequence variables
 void init_sequence(void);
 
+//Reset sequence variables once sequence ends
+void reset_sequence(void);
 
 //Use stored sequence and timer to enable/disable LEDs
 void run_LED_sequence(void);
