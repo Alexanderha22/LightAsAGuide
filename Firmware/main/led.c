@@ -377,8 +377,8 @@ void set_led_locations(void)
     LEDlocations[8].y = 63;
     LEDlocations[8].section = 2;
 
-    LEDlocations[9].x = -63;
-    LEDlocations[9].y = 63;
+    LEDlocations[9].x = 63;
+    LEDlocations[9].y = -63;
     LEDlocations[9].section = 2;
 
     LEDlocations[10].x = -63;
