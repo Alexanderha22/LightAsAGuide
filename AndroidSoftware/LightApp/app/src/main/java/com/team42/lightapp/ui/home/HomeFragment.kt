@@ -70,10 +70,10 @@ class HomeFragment : Fragment() {
         var lastSendTime : Long = 0
 
         // Send data to hardware
-        fun Send()
+        fun Send(ignoreDelay : Boolean = false)
         {
             val now = SystemClock.elapsedRealtime()
-            if(now < lastSendTime + minDeltaTime)
+            if(!ignoreDelay && (now < lastSendTime + minDeltaTime))
             {
                 return
             }
@@ -119,7 +119,7 @@ class HomeFragment : Fragment() {
             override fun onStartTrackingTouch(bar: SeekBar?) { return }
 
             // Send when done tracking
-            override fun onStopTrackingTouch(bar: SeekBar?) { return }
+            override fun onStopTrackingTouch(bar: SeekBar?) { Send(true) }
         })
 
         // Change brightness bar when number changes
@@ -151,7 +151,7 @@ class HomeFragment : Fragment() {
             override fun onStartTrackingTouch(bar: SeekBar?) { return }
 
             // Send when done tracking
-            override fun onStopTrackingTouch(bar: SeekBar?) { return }
+            override fun onStopTrackingTouch(bar: SeekBar?) { Send(true) }
         })
 
         // Change frequency  bar when number changes
