@@ -16,34 +16,35 @@
 #include "driver/gptimer.h"
 #include "esp_log.h"
 
+#define LED_SOLID_FREQUENCY      (1000)
 
 //LED0 on GPIO16
 #define LEDC0_TIMER              LEDC_TIMER_0
 #define LEDC0_OUTPUT_IO          (16) // Define the output GPIO
 #define LEDC0_CHANNEL            LEDC_CHANNEL_0
 #define LEDC0_DUTY               (0) // Set duty to 0%. (2 ** 13) * 50% = 4096
-#define LEDC0_FREQUENCY          (1000) // Frequency in Hertz
+#define LEDC0_FREQUENCY          LED_SOLID_FREQUENCY
 
 //LED1 on GPIO17
 #define LEDC1_TIMER              LEDC_TIMER_1
 #define LEDC1_OUTPUT_IO          (17) // Define the output GPIO
 #define LEDC1_CHANNEL            LEDC_CHANNEL_1
 #define LEDC1_DUTY               (0) // Set duty to 0%. (2 ** 13) * 50% = 4096
-#define LEDC1_FREQUENCY          (1000) // Frequency in Hertz
+#define LEDC1_FREQUENCY          LED_SOLID_FREQUENCY
 
 //LED2 on GPIO18
 #define LEDC2_TIMER              LEDC_TIMER_2
 #define LEDC2_OUTPUT_IO          (18) // Define the output GPIO
 #define LEDC2_CHANNEL            LEDC_CHANNEL_2
 #define LEDC2_DUTY               (0) // Set duty to 0%. (2 ** 13) * 50% = 4096
-#define LEDC2_FREQUENCY          (1000) // Frequency in Hertz. Set frequency at 4 kHz
+#define LEDC2_FREQUENCY          LED_SOLID_FREQUENCY
 
 //LED3 on GPIO19
 #define LEDC3_TIMER              LEDC_TIMER_3
 #define LEDC3_OUTPUT_IO          (19) // Define the output GPIO
 #define LEDC3_CHANNEL            LEDC_CHANNEL_3
 #define LEDC3_DUTY               (0) // Set duty to 0%. (2 ** 13) * 50% = 4096
-#define LEDC3_FREQUENCY          (1000) // Frequency in Hertz. Set frequency at 4 kHz
+#define LEDC3_FREQUENCY          LED_SOLID_FREQUENCY
 
 
 //General
@@ -146,7 +147,7 @@ void reset_sequence(void);
 void run_LED_sequence(void);
 
 //Calculate the correct flashing period and brightness when recieving info for setsection
-void calculate_LED_settings(int lightNum, float givenDuty, float frequency);
+void calculate_LED_settings(int lightNum, float givenDuty, float frequency, float startTime);
 
 
 

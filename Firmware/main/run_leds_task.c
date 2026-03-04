@@ -21,7 +21,8 @@ void run_leds_task(void *arg)
             //Run the sequece
             run_LED_sequence();
         }
-        else if (GlobalState == STANDBY)
+
+        if (true)
         {
             //Loop for the LEDs to have independent frequency and PWM
             for (int i = 0; i < NUM_SECTIONS; i++)

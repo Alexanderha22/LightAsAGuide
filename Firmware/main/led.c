@@ -75,7 +75,7 @@ void run_LED_sequence(void)
         printf("Current Time Stamp: %f\n", currentTimeStamp);
         printf("On Block Number: %d\n", currentBlock);
 
-        //Go to next timestamp if not on last block
+        //Go to and store next timestamp if not on last block
         if (currentBlock < StoredSequence.M - 1)
         {
             //Update next timestamp
@@ -104,30 +104,24 @@ void run_LED_sequence(void)
         //Loop through all light sections
         for (int lightNum = 0; lightNum < StoredSequence.N; lightNum++)
         {
-            printf("Starting light frequencies\n");
+           /*  printf("Starting light frequencies\n");
 
             printf("lightNum: %i\n", lightNum);
 
             printf("total number of lights (N): %i\n", StoredSequence.N);
 
-            printf("Setting to brightness: %f\n", StoredSequence.blocks[currentBlock].settings[lightNum].DutyCycle);
-            printf("Setting to frequency: %f\n", StoredSequence.blocks[currentBlock].settings[lightNum].Frequency);
+             */
 
             float currDuty = StoredSequence.blocks[currentBlock].settings[lightNum].DutyCycle;
             float currFreq = StoredSequence.blocks[currentBlock].settings[lightNum].Frequency;
 
-            //Check if frequency is 0, if yes then set to solid
-            if (currFreq == 0)
-            {   
-                printf("Setting LED to solid\n");
-                ledc_set_freq(LEDC_MODE, LED_TIMERS[lightNum], 100);
-            }
-            else
-            {
-                ledc_set_freq(LEDC_MODE, LED_TIMERS[lightNum], currFreq);
-            }
+            printf("Setting to brightness: %f\n", currDuty);
+            printf("Setting to frequency: %f\n", currFreq);
+
             
-            printf("Setting light %i frequency\n", lightNum);
+
+            calculate_LED_settings(lightNum, currDuty, currFreq, current_time);
+
 
             //Ramp LED if there is another value to go to (not on last block)
             if (currentBlock < StoredSequence.M - 1)
@@ -136,24 +130,6 @@ void run_LED_sequence(void)
                 printf("Passed not on last block\n");
 
                 float nextDuty = StoredSequence.blocks[currentBlock + 1].settings[lightNum].DutyCycle;
-
-                //Need to just set duty cycle first (no change / fade)
-                uint32_t duty = (pow(2, 13)) * (currDuty / 100);
-
-                printf("Updating Duty\n");
-
-                //Stop any lingering fade from previous block
-                //ledc_stop(LEDC_MODE, LED_CHANNELS[lightNum], 0);
-
-
-
-                ledc_set_duty(LEDC_MODE, LED_CHANNELS[lightNum], duty);
-
-                printf("finished set_duty\n");
-
-                ledc_update_duty(LEDC_MODE, LED_CHANNELS[lightNum]);
-
-                printf("Done updating duty\n");
                 
                 //Check if need to fade (change in brightness between sections)
                 if (currDuty != nextDuty)
@@ -192,7 +168,7 @@ void run_LED_sequence(void)
     }
 }
 
-void calculate_LED_settings(int lightNum, float duty, float frequency)
+void calculate_LED_settings(int lightNum, float duty, float frequency, float startTime)
 {
 
     //Calculate flashing period from given frequency
@@ -210,9 +186,9 @@ void calculate_LED_settings(int lightNum, float duty, float frequency)
 
 
     //Store the values
-    LED_SETTINGS[lightNum]->duty = duty;
+    LED_SETTINGS[lightNum]->duty = (pow(2, 13)) * (duty / 100);
     LED_SETTINGS[lightNum]->period = period;
-    LED_SETTINGS[lightNum]->start_time = get_current_time();
+    LED_SETTINGS[lightNum]->start_time = startTime;
 
     printf("Done saving LED settings\n");
 
@@ -710,7 +686,6 @@ void translate_command(unsigned char* sequence)
 
                 //Set duty
                 
-                uint32_t duty = (pow(2, 13)) * (givenDuty / 100);
                 /*ledc_set_duty(LEDC_MODE, LED_CHANNELS[lightNum], duty);
                 ledc_update_duty(LEDC_MODE, LED_CHANNELS[lightNum]);*/
                 printf("Setting Brightness to %f\n", givenDuty); 
@@ -732,7 +707,7 @@ void translate_command(unsigned char* sequence)
                 printf("Setting Frequency to %f\n", frequency);
 
                 //Set if solid or off (doesnt need to be handled by task for flashing)
-                if (frequency == 0) //Solid
+    /*             if (frequency == 0) //Solid
                 {   
                     printf("Setting LED to solid (0 frequency)\n");
                     ledc_set_freq(LEDC_MODE, LED_TIMERS[lightNum], 100);
@@ -743,10 +718,10 @@ void translate_command(unsigned char* sequence)
                 {
                     ledc_set_duty(LEDC_MODE, LED_CHANNELS[lightNum], duty);
                     ledc_update_duty(LEDC_MODE, LED_CHANNELS[lightNum]);
-                }
+                } */
 
                 //Updated LED settings
-                calculate_LED_settings(lightNum, duty, frequency);
+                calculate_LED_settings(lightNum, givenDuty, frequency, get_current_time());
 
             }
             
@@ -768,7 +743,7 @@ void turn_off_leds(void)
         ledc_update_duty(LEDC_MODE, LED_CHANNELS[i]);
         ledc_set_freq(LEDC_MODE, LED_TIMERS[i], 1000);
 
-        calculate_LED_settings(i, 0, 0);
+        calculate_LED_settings(i, 0, 0, get_current_time());
 
     }
 
