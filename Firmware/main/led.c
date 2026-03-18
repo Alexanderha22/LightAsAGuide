@@ -15,6 +15,8 @@ float nextTimeStamp;
 float sequenceStartTime;
 int sequenceStarted;
 FSMState GlobalState;
+int activeRelayGPIO = 4;
+RelayState relayState;
 
 //LED setting variables
 LEDSettings Section0Settings = {0, 0, 0};
@@ -25,10 +27,20 @@ LEDSettings Section3Settings = {0, 0, 0};
 //LED setting variables
 LEDSettings* LED_SETTINGS[4] = {&Section0Settings, &Section1Settings, &Section2Settings, &Section3Settings};
 
-
-
-
 LightLocation LEDlocations[NUM_LIGHTS];
+
+
+//Timer Setup
+gptimer_handle_t gptimer = NULL;
+gptimer_config_t timer_config = {
+    .clk_src = GPTIMER_CLK_SRC_DEFAULT, // Select the default clock source
+    .direction = GPTIMER_COUNT_UP,      // Counting direction is up
+    .resolution_hz = 1 * 1000 * 1000,   // Resolution is 1 MHz, i.e., 1 tick equals 1 microsecond
+};
+
+//ESPTimer variable
+esp_timer_handle_t oneshot_timer;
+
 
 void init_sequence(void)
 {
@@ -148,7 +160,7 @@ void run_LED_sequence(void)
 
                     //Find duty cycle from percent provided
                     //Equation example: Set duty to 50%: (2 ** 13) * 50% = 4096
-                    uint32_t duty = (pow(2, 13)) * (nextDuty / 100);
+                    //uint32_t duty = (pow(2, 13)) * (nextDuty / 100);
 
                     printf("Setting fade\n");
 
@@ -179,7 +191,7 @@ void calculate_LED_settings(int lightNum, float duty, float frequency, float sta
     }
     else
     {
-        period = -1;
+        period = -1; //Solid
     }
 
     printf("Saving LED settings\n");
@@ -191,6 +203,34 @@ void calculate_LED_settings(int lightNum, float duty, float frequency, float sta
     LED_SETTINGS[lightNum]->start_time = startTime;
 
     printf("Done saving LED settings\n");
+
+    //Turn on solid if not flashing so only has to do so once
+    if ((period == -1) && (duty > 0))
+    {
+        ledc_set_duty(LEDC_MODE, LED_CHANNELS[lightNum], LED_SETTINGS[lightNum]->duty);
+        ledc_update_duty(LEDC_MODE, LED_CHANNELS[lightNum]);
+    }
+
+
+    //Check if all settings are 0 brightness, if yes turn off relay
+    //Also check if we need to turn on the relay
+    bool allzero = true;
+    for (int i = 0; i < NUM_SECTIONS; i++)
+    {
+        if (LED_SETTINGS[i]->duty != 0)
+        {
+            allzero = false;
+        }
+    }
+
+    if (allzero && relayState == ON)
+    {
+        turn_off_relay();
+    }
+    else if (!allzero && relayState == OFF)
+    {
+        turn_on_relay();
+    }
 
 }
 
@@ -305,13 +345,6 @@ void init_leds(void)
 void init_state(void)
 {
     GlobalState = STANDBY;
-
-    // Create a timer instance
-    ESP_ERROR_CHECK(gptimer_new_timer(&timer_config, &gptimer));
-    // Enable the timer
-    ESP_ERROR_CHECK(gptimer_enable(gptimer));
-    // Start the timer
-    ESP_ERROR_CHECK(gptimer_start(gptimer));
 }
 
 void set_led_locations(void)
@@ -744,13 +777,15 @@ void turn_off_leds(void)
         ledc_set_freq(LEDC_MODE, LED_TIMERS[i], 1000);
 
         calculate_LED_settings(i, 0, 0, get_current_time());
-
     }
+
+    //Turn off LED relay
+    turn_off_relay();
 
 }
 
 //Get current time on timer
-float get_current_time()
+float get_current_time(void)
 {
     uint32_t resolution_hz;
     ESP_ERROR_CHECK(gptimer_get_resolution(gptimer, &resolution_hz));
@@ -759,4 +794,96 @@ float get_current_time()
     float current_time = (double)count / resolution_hz;
 
     return current_time;
+}
+
+//Initializes pins for GPIO
+void init_GPIO(void)
+{
+    //GPIO2 for output to relay
+    gpio_config_t io_config_2 = {};
+    io_config_2.intr_type = 0;
+    io_config_2.mode = GPIO_MODE_OUTPUT;
+    io_config_2.pin_bit_mask = 1ULL << 2;
+    io_config_2.pull_down_en = 0;
+    io_config_2.pull_up_en = 0;
+    gpio_config(&io_config_2);
+
+    //GPIO4 for output to relay
+    gpio_config_t io_config_4 = {};
+    io_config_4.intr_type = 0;
+    io_config_4.mode = GPIO_MODE_OUTPUT;
+    io_config_4.pin_bit_mask = 1ULL << 4;
+    io_config_4.pull_down_en = 0;
+    io_config_4.pull_up_en = 0;
+    gpio_config(&io_config_4);
+}
+
+//Initializes both gptimer (sequence timing) and esptimer (interrupt for relay control)
+void init_timers(void)
+{
+    //GPTIMER
+    // Create a timer instance
+    ESP_ERROR_CHECK(gptimer_new_timer(&timer_config, &gptimer));
+    // Enable the timer
+    ESP_ERROR_CHECK(gptimer_enable(gptimer));
+    // Start the timer
+    ESP_ERROR_CHECK(gptimer_start(gptimer));
+
+
+    //ESPTIMER
+    const esp_timer_create_args_t oneshot_timer_args = {
+        .callback = &timer_callback_end_signal,
+        .name = "oneshot-timer"
+    };
+    ESP_ERROR_CHECK(esp_timer_create(&oneshot_timer_args, &oneshot_timer));
+
+}
+
+//Callback function when esptimer ends to cancel the gpio signal that was set high
+void timer_callback_end_signal(void* arg)
+{
+    //Turns off gpio that was previously turned on 
+    gpio_set_level(activeRelayGPIO, 0);
+}
+
+//Sends signal to turn on relay (GPIO2)
+void turn_on_relay(void)
+{
+
+    relayState = ON;
+
+    gpio_set_level(2, 1);
+
+    activeRelayGPIO = 2;
+
+    //Start timer to shut off after short period (50 ms)
+    esp_timer_stop(oneshot_timer);
+    ESP_ERROR_CHECK(esp_timer_start_once(oneshot_timer, 50000));
+
+    printf("Turning on relay\n");
+}
+
+//Sends signal to turn off relay (GPIO4)
+void turn_off_relay(void)
+{
+    relayState = OFF;
+
+    gpio_set_level(4, 1);
+
+    activeRelayGPIO = 4;
+
+    //Start timer to shut off after short period (50 ms)
+    esp_timer_stop(oneshot_timer);
+    ESP_ERROR_CHECK(esp_timer_start_once(oneshot_timer, 50000));
+
+    printf("Turning off relay\n");
+}
+
+//Run all initialize functions
+void initialize(void)
+{
+    init_GPIO();
+    init_leds();
+    init_state();
+    init_timers();
 }

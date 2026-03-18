@@ -41,8 +41,7 @@ void app_main(void)
         xRingbufferCreate(4096, RINGBUF_TYPE_NOSPLIT);
     assert(rb);
 
-    init_leds();
-    init_state();
+    initialize();
 
     //Runs the command parsing from bluetooth on core 0
     xTaskCreatePinnedToCore(parse_data_task, "parser", 4096, rb, 5, NULL, 0);

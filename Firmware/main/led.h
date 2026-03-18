@@ -9,6 +9,12 @@
 #include "esp_mac.h"
 #include "driver/ledc.h"
 #include "esp_err.h"
+#include "driver/gpio.h"
+#include "esp_timer.h"
+#include "esp_log.h"
+#include "esp_sleep.h"
+#include "sdkconfig.h"
+
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -66,8 +72,6 @@ extern uint32_t LED_GPIO[];
 extern ledc_timer_t LED_TIMERS[];
 extern ledc_channel_t LED_CHANNELS[];
 
-
-
 //Structs to define sequence settings
 typedef struct
 {
@@ -107,6 +111,15 @@ typedef enum
 
 extern FSMState GlobalState;
 
+//Enum to contain what state the relay is in
+typedef enum
+{
+    ON,
+    OFF
+} RelayState;
+
+extern RelayState relayState;
+
 //LED settings for live control to be stored here
 //Used by run_leds_task
 typedef struct
@@ -124,13 +137,11 @@ extern LEDSettings Section3Settings;
 extern LEDSettings* LED_SETTINGS[4];
 
 
-//Timer Setup
-static gptimer_handle_t gptimer = NULL;
-static gptimer_config_t timer_config = {
-    .clk_src = GPTIMER_CLK_SRC_DEFAULT, // Select the default clock source
-    .direction = GPTIMER_COUNT_UP,      // Counting direction is up
-    .resolution_hz = 1 * 1000 * 1000,   // Resolution is 1 MHz, i.e., 1 tick equals 1 microsecond
-};
+//ESPTimer callback variable to control GPIO
+//Default: GPIO4 (turn off relay)
+extern int activeRelayGPIO;
+
+
 
 
 //Loop in order to run the loaded sequence
@@ -169,7 +180,19 @@ void translate_command(unsigned char* sequence);
 
 void turn_off_leds(void);
 
-float get_current_time();
+float get_current_time(void);
+
+void init_GPIO(void);
+
+void init_timers(void);
+
+void timer_callback_end_signal(void* arg);
+
+void turn_on_relay(void);
+
+void turn_off_relay(void);
+
+void initialize(void);
 
 #endif
 
