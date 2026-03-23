@@ -4,10 +4,8 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
-import com.team42.lightapp.HardwareSystem
 
 // Colors for the groups to pick from (based on index)
 val GROUP_COLORS : Array<Int> = arrayOf(Color.YELLOW, Color.BLUE, Color.MAGENTA, Color.RED,
@@ -27,7 +25,7 @@ class CanvasLightGroup {
     var paint : Paint = Paint()
 }
 
-class CanvasView(context: Context) : View(context) {
+class DashboardCanvasView(context: Context) : View(context) {
     private val mainPaint : Paint = Paint()
 
     val lightGroups : MutableList<CanvasLightGroup> = mutableListOf()

@@ -25,6 +25,7 @@ const val MESSAGE_READ: Int = 0
 const val MESSAGE_WRITE: Int = 1
 const val MESSAGE_TOAST: Int = 2
 
+val EMPTY_SESSION : LightSession = LightSession("")
 
 object HardwareSystem
 {
@@ -39,6 +40,10 @@ object HardwareSystem
     @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT])
     fun connectToPairedDevice(context: Context) : Boolean
     {
+        //Save the context first
+        if(!handler.hasInitialized)
+            handler.initialize(context)
+
         val bluetoothManager: BluetoothManager? = getSystemService(context, BluetoothManager::class.java)
 
         // If adapter is null, return false
@@ -259,7 +264,14 @@ object HardwareSystem
     // Bluetooth socket connection uses another thread (ConnectedThread class)
     // This handler operates on the main thread and interfaces with the microcontroller functions
     private val handler = object : Handler(Looper.getMainLooper()) {
-        fun handleMessage(context: Context, msg: Message) {
+        val hasInitialized: Boolean = false
+        lateinit var context : Context
+
+        fun initialize(c: Context) {
+            context = c
+        }
+
+        override fun handleMessage(msg: Message) {
             when (msg.what) {
                 MESSAGE_READ -> {
                     val readBytes = msg.obj as ByteArray
@@ -277,82 +289,121 @@ object HardwareSystem
             }
         }
     }
-    private fun parseReceivedMessage(context: Context, message : String)
-    {
-        val split = message.split(",")
+    private fun parseReceivedMessage(context: Context, message : String) {
+        var split = message.split(",", "\n", "\r\n")
 
+        var commandFound = false
+        while (!split.isEmpty() && !commandFound) {
+            commandFound = true
+            when (split[0]) {
+                "SetInfo" -> {
+                    try {
+                        val ledCount = split[1].toInt()
+                        sectionCount = split[2].toInt()
 
-        when(split[0])
-        {
-            "SetInfo" -> {
-                try {
-                    val ledCount = split[1].toInt()
-                    sectionCount = split[2].toInt()
+                        // Reset old values
+                        ledList.clear()
+                        externalModuleMap.clear()
 
-                    // Reset old values
-                    ledList.clear()
-                    externalModuleMap.clear()
-
-
-                    // Add all LEDs
-                    for(i in 0 until ledCount)
-                    {
-                        // Check invalid parameter count
-                        if(5 + 3*i >= split.count())
-                        {
-                            Toast.makeText(context, "Invalid Parameter Count", Toast.LENGTH_SHORT).show()
+                        //Failed?
+                        if(split.count() < ledCount + 5)
                             return
+
+                        // Add all LEDs
+                        for (i in 4 until ledCount) {
+                            val light = split[i].split(".")
+
+                            if(light.contains(""))
+                                continue
+
+                            // Check invalid parameter count
+                            if (light.count() != 4) {
+                                Toast.makeText(
+                                    context,
+                                    "Invalid Parameter Count",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                return
+                            }
+
+                            val num = light[0].removePrefix("L").toInt()
+                            val x = light[1].toInt()
+                            val y = light[2].toInt()
+                            val section = light[3].toInt()
+
+                            // Check invalid section
+                            if (section >= sectionCount) {
+                                Toast.makeText(
+                                    context,
+                                    "Invalid Section Number: $section\nMax: ${sectionCount - 1}",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+
+                            ledList.add(
+                                LEDInfo(x, y, section)
+                            )
                         }
 
-                        // Check invalid section
-                        val section = split[5 + 3*i].toInt()
-                        if(section >= sectionCount)
-                        {
-                            Toast.makeText(context, "Invalid Section Number: $section\nMax: ${sectionCount-1}", Toast.LENGTH_SHORT).show()
+                        // Check for addition inputs
+                        var currentIndex = 3 * (ledCount + 1)
+                        while (currentIndex + 3 < split.count()) {
+                            val isInput: Boolean = split[currentIndex + 1] == "Input"
+                            externalModuleMap[split[currentIndex].toInt()] =
+                                ExternalModule(
+                                    isInput,
+                                    split[currentIndex + 2],
+                                    split[currentIndex + 3]
+                                )
+                            currentIndex += 4
                         }
 
-                        ledList.add(LEDInfo(split[3 + 3*i].toInt(), split[4 + 3*i].toInt(), section))
+                        state = HardwareState.IDLE
+                    } catch (e: NumberFormatException) {
+                        Toast.makeText(
+                            context,
+                            "Invalid Parameters for SetInfo",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
+                }
 
-                    // Check for addition inputs
-                    var currentIndex = 3 * (ledCount + 1)
-                    while(currentIndex + 3 < split.count())
-                    {
-                        val isInput : Boolean = split[currentIndex + 1] == "Input"
-                        externalModuleMap[split[currentIndex].toInt()] =
-                            ExternalModule(isInput, split[currentIndex + 2], split[currentIndex + 3])
-                        currentIndex += 4
+                "SendUpdate" -> {
+                    try {
+                        val eID = split[1].toInt()
+                        val value = split[2].toDouble()
+                        externalModuleMap[eID]!!.value = value
+                    } catch (e: NumberFormatException) {
+                        Toast.makeText(
+                            context,
+                            "Invalid Parameters for SendUpdate",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    } catch (e: NullPointerException) {
+                        Toast.makeText(
+                            context,
+                            "External Device with ID: ${split[1].toInt()} does not exist",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
+                }
 
+                "SendError" -> {
+                    Toast.makeText(context, "Error: ${split[1]}", Toast.LENGTH_SHORT).show()
+                }
+
+                "SessionEnd" -> {
+                    Toast.makeText(context, "Session Finished", Toast.LENGTH_SHORT).show()
                     state = HardwareState.IDLE
                 }
-                catch (e : NumberFormatException) {
-                    Toast.makeText(context, "Invalid Parameters for SetInfo", Toast.LENGTH_SHORT).show()
+
+                else -> {
+                    Toast.makeText(context, "Unrecognized Command: ${split[0]}", Toast.LENGTH_SHORT)
+                        .show()
+                    commandFound = false
+                    split = split.drop(1)
                 }
             }
-            "SendUpdate" -> {
-                try {
-                    val eID = split[1].toInt()
-                    val value = split[2].toDouble()
-                    externalModuleMap[eID]!!.value = value
-                }
-                catch (e : NumberFormatException)
-                {
-                    Toast.makeText(context, "Invalid Parameters for SendUpdate", Toast.LENGTH_SHORT).show()
-                }
-                catch (e : NullPointerException)
-                {
-                    Toast.makeText(context, "External Device with ID: ${split[1].toInt()} does not exist", Toast.LENGTH_SHORT).show()
-                }
-            }
-            "SendError" -> {
-                Toast.makeText(context, "Error: ${split[1]}", Toast.LENGTH_SHORT).show()
-            }
-            "SessionEnd" -> {
-                Toast.makeText(context, "Session Finished", Toast.LENGTH_SHORT).show()
-                state = HardwareState.IDLE
-            }
-            else -> Toast.makeText(context, "Unrecognized Command: ${split[0]}", Toast.LENGTH_SHORT).show()
         }
     }
 

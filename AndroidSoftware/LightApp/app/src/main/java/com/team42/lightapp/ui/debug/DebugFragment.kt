@@ -96,7 +96,6 @@ class DebugFragment : Fragment() {
                 if(HardwareSystem.connectToPairedDevice(requireContext()))
                 {
                     Toast.makeText(requireContext(), "Connected", Toast.LENGTH_SHORT).show()
-                    HardwareSystem.uC_GetInfo()
                 }
                 else
                 {

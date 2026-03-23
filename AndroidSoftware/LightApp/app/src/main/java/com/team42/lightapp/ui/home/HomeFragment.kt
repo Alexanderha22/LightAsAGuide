@@ -20,7 +20,7 @@ import com.team42.lightapp.HardwareSystem
 import com.team42.lightapp.databinding.FragmentHomeBinding
 import com.team42.lightapp.LightSource
 import android.widget.Toast
-import com.team42.lightapp.CanvasView
+import com.team42.lightapp.DashboardCanvasView
 
 class HomeFragment : Fragment() {
 
@@ -51,7 +51,7 @@ class HomeFragment : Fragment() {
 
         // LED MAP
         val mapLayout : FrameLayout = binding.homeLightDrawable
-        val mapCanvasView : CanvasView = CanvasView(requireContext())
+        val mapCanvasView = DashboardCanvasView(requireContext())
         mapCanvasView.updateLights()
         mapLayout.addView(mapCanvasView)
 
