@@ -460,7 +460,7 @@ void translate_command(unsigned char* sequence)
         for (int i = 0; i < NUM_LIGHTS; i++)
         {
             char buffer[20] = "";
-            sprintf(buffer, "L%i%i,L%i%i,L%i%i,\n", i, LEDlocations[i].x, i, LEDlocations[i].y, i, LEDlocations[i].section);
+            sprintf(buffer, "L%i.%i.%i.%i,\n", i, LEDlocations[i].x, LEDlocations[i].y, LEDlocations[i].section);
             strcat(returnCommand, buffer);
         }
 
