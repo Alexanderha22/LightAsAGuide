@@ -84,9 +84,22 @@ class HomeFragment : Fragment() {
                         brightnessSeek.progress.toDouble() / 10.0,
                         frequencySeek.progress.toDouble() / 100.0)
 
+
+                    // Get a list of active groups
+                    val activeGroups : MutableList<Int> = mutableListOf()
+                    mapCanvasView.lightGroups.forEach { group ->
+                        if(group.isActive)
+                            activeGroups.add(group.id)
+                    }
+                    // Send one set section command for all active groups
+                    HardwareSystem.uC_SetSection(ls, activeGroups.toList())
+
+                    /*
+                    // Send a set section command for every active group
                     for(group in mapCanvasView.lightGroups)
                         if(group.isActive)
                             HardwareSystem.uC_SetSection(group.id, ls)
+                     */
                 }
                 else {
                     HardwareSystem.uC_StopAll()

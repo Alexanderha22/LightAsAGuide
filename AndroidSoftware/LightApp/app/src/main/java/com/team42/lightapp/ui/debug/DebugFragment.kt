@@ -161,7 +161,7 @@ class DebugFragment : Fragment() {
         rootView.findViewById<Button>(R.id.sectionTest).setOnClickListener{
             try {
                 val ls = LightSource(50.0, 10.0)
-                HardwareSystem.uC_SetSection(3,ls)
+                HardwareSystem.uC_SetSection(ls, listOf(3))
             }
             catch (err : NullPointerException)
             {
