@@ -145,19 +145,26 @@ object HardwareSystem
         btThread!!.write("StopAll".toByteArray())
         state = HardwareState.IDLE
     }
-    fun uC_SetSection(index : Int, source : LightSource)
+    fun uC_SetSection(source : LightSource, index : List<Int>)
     {
         // Do not send if device is running a session
         if(HardwareSystem.state == HardwareSystem.HardwareState.RUNNING)
             throw Exception("Device currently running session")
 
-        if(index >= sectionCount)
-            throw Exception("Index cannot be greater than section count")
+        index.forEach { id ->
+            if (id >= sectionCount)
+                throw Exception("Index cannot be greater than section count")
+        }
 
         // Convert to perceived brightness (gamma curve)
         val adjustedBrightness = (source.brightness / 100.0).pow(2.2) * 100.0
 
-        btThread!!.write("SetSection,${index},${adjustedBrightness},${source.frequency}".toByteArray())
+        var message = "SetSection,${adjustedBrightness},${source.frequency}"
+        index.forEach{ id ->
+            message += ",$id"
+        }
+
+        btThread!!.write(message.toByteArray())
         
     }
     fun uC_GetInfo()
