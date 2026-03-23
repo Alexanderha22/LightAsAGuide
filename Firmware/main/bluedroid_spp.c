@@ -47,7 +47,9 @@ static char *bda2str(uint8_t * bda, char *str, size_t size);
 
 static RingbufHandle_t rx_rb = NULL;
 
-static esp_spp_cb_param_t *global_param;
+static esp_spp_cb_param_t global_param;
+static esp_spp_cb_event_t global_event;
+
 /*
  *   initializing bluetooth controller for use
  *   steps:
@@ -147,20 +149,28 @@ void bluetooth_init(RingbufHandle_t rb) {
     ESP_LOGI(SPP_TAG, "Own address:[%s]", bda2str((uint8_t *)esp_bt_dev_get_address(), bda_str, sizeof(bda_str)));
 }
 
+// write a message over bluetooth
 bool bt_write(char *str, int len) {
-    if (global_param->write.cong) { 
-        ESP_LOGI(SPP_TAG, "Congested");
-        return false;
-    }
-    ESP_LOGI(SPP_TAG, "Contents: %s", str);
-    esp_spp_write(global_param->write.handle, len, (uint8_t *)str);
-    return true;
+    switch (global_event) {
+    case ESP_SPP_WRITE_EVT:
+        esp_spp_write(global_param.write.handle, len, (uint8_t *)str);
+        break;
+        
+    case ESP_SPP_SRV_OPEN_EVT:
+        esp_spp_write(global_param.srv_open.handle, len, (uint8_t *)str);
+        break;
+
+    case ESP_SPP_DATA_IND_EVT: // data is received
+        esp_spp_write(global_param.data_ind.handle, len, (uint8_t *)str);
+        break;
+    }  
 }
 
 // callback function to handle all spp events
 static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
 {
-    global_param = param;
+    global_param = *param;
+    global_event = event;
     char bda_str[18] = {0};
 
     switch (event) {
