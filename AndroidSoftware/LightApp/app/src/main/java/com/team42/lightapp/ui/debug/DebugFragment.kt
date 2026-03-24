@@ -22,9 +22,12 @@ import com.team42.lightapp.LightSource
 import com.team42.lightapp.R
 import com.team42.lightapp.SessionBlock
 import com.team42.lightapp.SessionManager
+import com.team42.lightapp.SessionManager.sessionFolder
 import com.team42.lightapp.deleteSession
 import com.team42.lightapp.getSessionList
 import com.team42.lightapp.saveSession
+import java.io.File
+import java.io.FileOutputStream
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -272,6 +275,22 @@ class DebugFragment : Fragment() {
             HardwareSystem.ledList.add(LEDInfo(0, 89, 3))
             HardwareSystem.ledList.add(LEDInfo(-89, 0, 3))
             HardwareSystem.ledList.add(LEDInfo(0, -89, 3))
+        }
+        rootView.findViewById<Button>(R.id.loadDefaultSessionTest).setOnClickListener{
+            //assets.list("DefaultSessions")
+            context?.assets?.list("DefaultSessions")?.forEach { name ->
+                val assetsession = context?.assets?.open("DefaultSessions/$name")
+                val file = File(SessionManager.sessionFolder, name)
+                if(!file.exists())
+                {
+                    file.createNewFile()
+                }
+                val output = FileOutputStream(file)
+                assetsession?.copyTo(output)
+                assetsession?.close()
+                output.close()
+            }
+
         }
 
         return rootView

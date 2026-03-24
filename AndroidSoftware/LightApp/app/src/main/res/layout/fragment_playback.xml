@@ -27,10 +27,12 @@
             android:layout_height="wrap_content"/>
     </ScrollView>
 
+    <!--
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/fragmentContainerView"
         android:name="com.team42.lightapp.ui.playback.SessionFragment"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
+        !-->
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -112,6 +112,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Fill LED List test" />
+
+            <Button
+                android:id="@+id/loadDefaultSessionTest"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Load Default Sessions" />
         </LinearLayout>
 
     </LinearLayout>
