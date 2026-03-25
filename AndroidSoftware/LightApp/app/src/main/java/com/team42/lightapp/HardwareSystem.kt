@@ -35,6 +35,7 @@ object HardwareSystem
     val ledList : MutableList<LEDInfo> = mutableListOf()
     val externalModuleMap : MutableMap<Int, ExternalModule> = mutableMapOf()
     private var state : HardwareState = HardwareState.DISCONNECTED
+    private var currentTimeStamp : Double = 0.0
 
     // Finds the required bluetooth connection from the list of paired devices, attempts to connect
     @RequiresApi(Build.VERSION_CODES.S)
@@ -398,6 +399,12 @@ object HardwareSystem
                 "SessionEnd" -> {
                     Toast.makeText(context, "Session Finished", Toast.LENGTH_SHORT).show()
                     state = HardwareState.IDLE
+                    currentTimeStamp = 0.0
+                }
+
+                "Timestamp" -> {
+                    Toast.makeText(context, "Timestamp: ${split[1]}", Toast.LENGTH_SHORT).show()
+                    currentTimeStamp = split[1].toDouble()
                 }
 
                 else -> {
