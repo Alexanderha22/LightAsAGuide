@@ -20,6 +20,7 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.util.UUID
 import kotlin.math.pow
+import kotlin.math.roundToInt
 
 const val MESSAGE_READ: Int = 0
 const val MESSAGE_WRITE: Int = 1
@@ -162,7 +163,9 @@ object HardwareSystem
         }
 
         // Convert to perceived brightness (gamma curve)
-        val adjustedBrightness = (source.brightness / 100.0).pow(2.2) * 100.0
+        var adjustedBrightness = ((source.brightness / 100.0).pow(2.2) * 100.0)
+        adjustedBrightness = (adjustedBrightness * 100.0).roundToInt() / 100.0
+
 
         var message = "SetSection,${adjustedBrightness},${source.frequency}"
         index.forEach{ id ->

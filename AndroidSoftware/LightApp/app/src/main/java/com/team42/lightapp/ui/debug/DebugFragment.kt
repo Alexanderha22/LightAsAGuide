@@ -256,6 +256,8 @@ class DebugFragment : Fragment() {
 
             HardwareSystem.sectionCount = 4
 
+            HardwareSystem.ledList.clear()
+
             HardwareSystem.ledList.add(LEDInfo(14, 14, 0))
             HardwareSystem.ledList.add(LEDInfo(14, -14, 0))
             HardwareSystem.ledList.add(LEDInfo(-14, -14, 0))
