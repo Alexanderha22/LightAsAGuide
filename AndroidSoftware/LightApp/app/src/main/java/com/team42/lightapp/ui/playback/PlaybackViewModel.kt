@@ -6,6 +6,7 @@ import android.widget.TableLayout
 import android.widget.TableRow
 import android.widget.TextView
 import android.widget.Toast
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.team42.lightapp.HardwareSystem
@@ -17,11 +18,7 @@ import com.team42.lightapp.EMPTY_SESSION
 
 class PlaybackViewModel : ViewModel() {
     private val _text = MutableLiveData<String>().apply {
-        value = "This"
+        value = "This is playback Fragment"
     }
-
-    //SessionFragment will reference this as the active light session
-    var lightSession = MutableLiveData<LightSession>().apply {
-        value = EMPTY_SESSION
-    }
+    val text: LiveData<String> = _text
 }
