@@ -150,7 +150,7 @@ void bluetooth_init(RingbufHandle_t rb) {
 }
 
 // write a message over bluetooth
-bool bt_write(char *str, int len) {
+void bt_write(char *str, int len) {
     switch (global_event) {
     case ESP_SPP_WRITE_EVT:
         esp_spp_write(global_param.write.handle, len, (uint8_t *)str);
@@ -162,6 +162,8 @@ bool bt_write(char *str, int len) {
 
     case ESP_SPP_DATA_IND_EVT: // data is received
         esp_spp_write(global_param.data_ind.handle, len, (uint8_t *)str);
+        break;
+    default:
         break;
     }  
 }
