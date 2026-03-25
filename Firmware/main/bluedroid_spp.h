@@ -4,6 +4,6 @@
 #include "freertos/ringbuf.h"
 
 void bluetooth_init(RingbufHandle_t rb);
-bool bt_write(char *str, int len);
+void bt_write(char *str, int len);
 
 #endif
