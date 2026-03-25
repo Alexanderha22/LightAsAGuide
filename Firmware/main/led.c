@@ -16,7 +16,7 @@ float sequenceStartTime;
 int sequenceStarted;
 FSMState GlobalState;
 int activeRelayGPIO = 4;
-RelayState relayState;
+RelayState relayState = OFF;
 
 //LED setting variables
 LEDSettings Section0Settings = {0, 0, 0};
@@ -44,6 +44,16 @@ esp_timer_handle_t oneshot_timer;
 
 void init_sequence(void)
 {
+
+    //Have LEDS reset
+    turn_off_leds();
+
+
+    //Save what time this command was recieved (start time)
+    sequenceStartTime = get_current_time();
+
+    //Set global state to begin sequence task
+    GlobalState = SEQUENCE;
 
     //Start sequence
     currentBlock = 0;
@@ -81,6 +91,8 @@ void run_LED_sequence(void)
 
     printf("Current Time: %f\n", current_time);
 
+    printf("Difference between start and current: %f\n", current_time - sequenceStartTime);
+
     if (currentTimeStamp <= current_time - sequenceStartTime) //See if enough time from start of sequence has passed
     {     
 
@@ -110,17 +122,23 @@ void run_LED_sequence(void)
 
         }
 
+        //Send timestamp to app
+        char sendTimeStamp[32];
+
+        sprintf(sendTimeStamp, "Timestamp,%0.2d", currentTimeStamp);
+
+        bt_write(sendTimeStamp, strlen(sendTimeStamp));
 
 
         //Need to set LEDS
         //Loop through all light sections
         for (int lightNum = 0; lightNum < StoredSequence.N; lightNum++)
         {
-           /*  printf("Starting light frequencies\n");
+             /*  printf("Starting light frequencies\n");
 
-            printf("lightNum: %i\n", lightNum);
+                printf("lightNum: %i\n", lightNum);
 
-            printf("total number of lights (N): %i\n", StoredSequence.N);
+                printf("total number of lights (N): %i\n", StoredSequence.N);
 
              */
 
@@ -135,7 +153,7 @@ void run_LED_sequence(void)
             calculate_LED_settings(lightNum, currDuty, currFreq, current_time);
 
 
-            //Ramp LED if there is another value to go to (not on last block)
+            /* //Ramp LED if there is another value to go to (not on last block)
             if (currentBlock < StoredSequence.M - 1)
             {
 
@@ -170,7 +188,7 @@ void run_LED_sequence(void)
                 }
 
                 printf("Setting light %i brightness\n", lightNum);
-            }
+            } */
 
         }
 
@@ -225,7 +243,7 @@ void calculate_LED_settings(int lightNum, float duty, float frequency, float sta
 
     if (allzero && relayState == ON)
     {
-        turn_off_relay();
+        //turn_off_relay();
     }
     else if (!allzero && relayState == OFF)
     {
@@ -482,6 +500,8 @@ void translate_command(unsigned char* sequence)
         //Turn off LEDS and reset them, stop sequence, reset state
         turn_off_leds();
 
+        turn_off_relay();
+
         GlobalState = STANDBY;
 
     }
@@ -647,17 +667,12 @@ void translate_command(unsigned char* sequence)
             }
             free(blockStrings);
 
-            //Save what time this command was recieved (start time)
-            sequenceStartTime = get_current_time();
 
-            //Have LEDS reset
-            turn_off_leds();
 
             //Initializes sequence data
             init_sequence();
 
-            //Set global state to begin sequence task
-            GlobalState = SEQUENCE;
+
 
 
 
@@ -689,21 +704,6 @@ void translate_command(unsigned char* sequence)
                     printf("ERROR NULL strtok\n");
                     return;
                 }
-
-
-                //Next goes to light number
-                strPtr = strtok(NULL, ",");
-
-                printf("StrPtr: %s\n", strPtr);
-
-                if (strPtr == NULL)
-                {
-                    printf("ERROR NULL strtok\n");
-                }
-
-                int lightNum = atoi(strPtr);
-
-                printf("Setting section number %i\n", lightNum);
 
                 //Next goes to brightness
                 strPtr = strtok(NULL, ",");
@@ -739,22 +739,34 @@ void translate_command(unsigned char* sequence)
                 
                 printf("Setting Frequency to %f\n", frequency);
 
-                //Set if solid or off (doesnt need to be handled by task for flashing)
-    /*             if (frequency == 0) //Solid
-                {   
-                    printf("Setting LED to solid (0 frequency)\n");
-                    ledc_set_freq(LEDC_MODE, LED_TIMERS[lightNum], 100);
-                    ledc_set_duty(LEDC_MODE, LED_CHANNELS[lightNum], duty);
-                    ledc_update_duty(LEDC_MODE, LED_CHANNELS[lightNum]);
-                }
-                else if (givenDuty == 0) //Off
+                //Then goes to all selected sections
+                while ((strPtr = strtok(NULL, ",")) != NULL)
                 {
-                    ledc_set_duty(LEDC_MODE, LED_CHANNELS[lightNum], duty);
-                    ledc_update_duty(LEDC_MODE, LED_CHANNELS[lightNum]);
-                } */
 
-                //Updated LED settings
-                calculate_LED_settings(lightNum, givenDuty, frequency, get_current_time());
+                    printf("StrPtr: %s\n", strPtr);
+
+                    if (strPtr == NULL)
+                    {
+                        printf("ERROR NULL strtok\n");
+                    }
+
+                    int lightNum = atoi(strPtr);
+
+                    printf("Setting section number %i\n", lightNum);
+
+                    if (lightNum < NUM_SECTIONS)
+                    {
+                        //Updated LED settings
+                        calculate_LED_settings(lightNum, givenDuty, frequency, get_current_time());
+                    }
+                    else
+                    {
+                        printf("ERROR (SetSection): section %i not valid\n", lightNum);
+                        bt_write("ERROR: Section out of range", strlen("ERROR: Section out of range"));
+                    }
+
+                    
+                }
 
             }
             
@@ -780,7 +792,7 @@ void turn_off_leds(void)
     }
 
     //Turn off LED relay
-    turn_off_relay();
+    //turn_off_relay();
 
 }
 
@@ -887,3 +899,4 @@ void initialize(void)
     init_state();
     init_timers();
 }
+
