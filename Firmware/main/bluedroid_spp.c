@@ -210,21 +210,11 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
                     param->srv_open.handle, bda2str(param->srv_open.rem_bda, bda_str, sizeof(bda_str)));
         ESP_LOGI(SPP_TAG, "Client Address: %s", bda2str(param->srv_open.rem_bda, bda_str, sizeof(bda_str)));
         ESP_LOGI(SPP_TAG, "Ready to receive data.");
-        
-        // Example: Send a welcome 
-        const char *welcome_msg = "SPP connection established successfully\r\n";
-        esp_spp_write(param->srv_open.handle, strlen(welcome_msg), (uint8_t *)welcome_msg);
-
-        // todo: queue "successful connection" light sequence (blink twice?)
-
         break;
 
     case ESP_SPP_DATA_IND_EVT: // data is received
         // log for debug
         ESP_LOGI(SPP_TAG, "Received message with length %d", param->data_ind.len);
-
-        const char *msg = "Data received\r\n";
-        esp_spp_write(param->data_ind.handle, strlen(msg), (uint8_t *)msg);
         ESP_LOGW(SPP_TAG, "data sent to ring buffer: %s", param->data_ind.data);
         // defer processing to data handler task w/ ring buffer
         BaseType_t res = xRingbufferSend(rx_rb, param->data_ind.data, param->data_ind.len, pdMS_TO_TICKS( 10 ));
