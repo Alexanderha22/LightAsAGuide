@@ -28,6 +28,8 @@ class CanvasLightGroup {
 class DashboardCanvasView(context: Context) : View(context) {
     private val mainPaint : Paint = Paint()
 
+    private var initialized = false
+
     val lightGroups : MutableList<CanvasLightGroup> = mutableListOf()
 
     init {
@@ -39,16 +41,16 @@ class DashboardCanvasView(context: Context) : View(context) {
 
         //TODO: Determine scale dynamically
         // Find canvas properties
-        val CENTER_W : Float = 700.0f / 2.0f
-        val CENTER_H : Float = 700.0f / 2.0f
-        val SCALE : Float = 3.0f
+        val CENTER_W : Float = width / 2.0f
+        val CENTER_H : Float = height / 2.0f
+        val SCALE : Float = 3.0f / 700.0f * width
 
         for(light in HardwareSystem.ledList) {
             // Assign lights
             val cl : CanvasLight = CanvasLight()
             cl.x = light.x.toFloat() * SCALE + CENTER_W
             cl.y = light.y.toFloat() * SCALE + CENTER_H
-            cl.r = 20.0f;
+            cl.r = 20.0f / 3.0f * SCALE
 
             // Check if group has been made yet
             var group : CanvasLightGroup? = null;
@@ -110,6 +112,12 @@ class DashboardCanvasView(context: Context) : View(context) {
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
+
+        if(!initialized)
+        {
+            updateLights()
+            initialized = true
+        }
 
         canvas.drawARGB(0xFF, 0xEB, 0xC7, 0xB2)
 

@@ -52,7 +52,6 @@ class HomeFragment : Fragment() {
         // LED MAP
         val mapLayout : FrameLayout = binding.homeLightDrawable
         val mapCanvasView = DashboardCanvasView(requireContext())
-        mapCanvasView.updateLights()
         mapLayout.addView(mapCanvasView)
 
         // BRIGHTNESS
