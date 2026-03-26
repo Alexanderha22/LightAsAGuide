@@ -21,6 +21,7 @@ import com.team42.lightapp.databinding.FragmentHomeBinding
 import com.team42.lightapp.LightSource
 import android.widget.Toast
 import com.team42.lightapp.DashboardCanvasView
+import com.team42.lightapp.WaveVisualizerView
 
 class HomeFragment : Fragment() {
 
@@ -53,6 +54,11 @@ class HomeFragment : Fragment() {
         val mapLayout : FrameLayout = binding.homeLightDrawable
         val mapCanvasView = DashboardCanvasView(requireContext())
         mapLayout.addView(mapCanvasView)
+
+        // Wave visual
+        val waveLayout : FrameLayout = binding.homeWaveDrawable
+        val mapWaveView = WaveVisualizerView(requireContext())
+        waveLayout.addView(mapWaveView)
 
         // BRIGHTNESS
         val brightnessNum: EditText = binding.homeEditBrightness
@@ -91,6 +97,7 @@ class HomeFragment : Fragment() {
                             activeGroups.add(group.id)
                     }
                     // Send one set section command for all active groups
+                    mapWaveView.updateSection(ls, activeGroups.toList())
                     HardwareSystem.uC_SetSection(ls, activeGroups.toList())
 
                     /*
