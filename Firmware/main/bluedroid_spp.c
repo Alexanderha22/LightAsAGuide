@@ -28,7 +28,7 @@
 #include "time.h"
 #include "sys/time.h"
 
-#define SPP_TAG "SPP_ACCEPTOR"
+#define SPP_TAG "BLUETOOTH_SPP"
 #define SPP_SERVER_NAME "SPP_SERVER"
 
 static const char local_device_name[] = CONFIG_EXAMPLE_LOCAL_DEVICE_NAME;
