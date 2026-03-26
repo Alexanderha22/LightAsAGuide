@@ -149,14 +149,19 @@ void bluetooth_init(RingbufHandle_t rb) {
     ESP_LOGI(SPP_TAG, "Own address:[%s]", bda2str((uint8_t *)esp_bt_dev_get_address(), bda_str, sizeof(bda_str)));
 }
 
-// write a message over bluetooth
+/* write a message over bluetooth:
+ * context-dependent connection handler
+ * based on the bt controller state
+ * is needed as an argument for
+ * esp_spp_write
+ */
 void bt_write(char *str, int len) {
     switch (global_event) {
-    case ESP_SPP_WRITE_EVT:
+    case ESP_SPP_WRITE_EVT: // 
         esp_spp_write(global_param.write.handle, len, (uint8_t *)str);
         break;
         
-    case ESP_SPP_SRV_OPEN_EVT:
+    case ESP_SPP_SRV_OPEN_EVT: // connection is open
         esp_spp_write(global_param.srv_open.handle, len, (uint8_t *)str);
         break;
 
