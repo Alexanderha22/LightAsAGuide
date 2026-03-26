@@ -149,15 +149,15 @@ void bluetooth_init(RingbufHandle_t rb) {
     ESP_LOGI(SPP_TAG, "Own address:[%s]", bda2str((uint8_t *)esp_bt_dev_get_address(), bda_str, sizeof(bda_str)));
 }
 
-/* write a message over bluetooth:
+/* 
+ * write a message over bluetooth:
  * context-dependent connection handler
  * based on the bt controller state
- * is needed as an argument for
- * esp_spp_write
+ * is needed as an argument for esp_spp_write
  */
 void bt_write(char *str, int len) {
     switch (global_event) {
-    case ESP_SPP_WRITE_EVT: // 
+    case ESP_SPP_WRITE_EVT: // data is being written
         esp_spp_write(global_param.write.handle, len, (uint8_t *)str);
         break;
         
@@ -199,7 +199,7 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
             // set name and make discoverable
             esp_bt_gap_set_device_name(local_device_name);
             esp_bt_gap_set_scan_mode(ESP_BT_CONNECTABLE, ESP_BT_GENERAL_DISCOVERABLE);
-            // todo: queue "discoverable" light sequence (fading in and out?)
+            // todo: start a "discoverable" light sequence (slow fade in and out?)
         } else { 
             // todo error handling
             ESP_LOGE(SPP_TAG, "ESP_SPP_START_EVT status:%d", param->start.status);
@@ -215,6 +215,7 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
                     param->srv_open.handle, bda2str(param->srv_open.rem_bda, bda_str, sizeof(bda_str)));
         ESP_LOGI(SPP_TAG, "Client Address: %s", bda2str(param->srv_open.rem_bda, bda_str, sizeof(bda_str)));
         ESP_LOGI(SPP_TAG, "Ready to receive data.");
+        // remote controller should send a light sequence to signify successful connection (blink?)
         break;
 
     case ESP_SPP_DATA_IND_EVT: // data is received
@@ -224,6 +225,7 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
         // defer processing to data handler task w/ ring buffer
         BaseType_t res = xRingbufferSend(rx_rb, param->data_ind.data, param->data_ind.len, pdMS_TO_TICKS( 10 ));
         if (res != pdTRUE) {
+            // TODO: send error msg back to remote controller (couldn't process command)
             ESP_LOGE(SPP_TAG, "Failed to send item \n");
         } else {
             ESP_LOGW(SPP_TAG, "Sent data to ring buffer successfully\r\n");
@@ -249,13 +251,9 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
         
     case ESP_SPP_CLOSE_EVT: // connection ended
         ESP_LOGI(SPP_TAG, "ESP_SPP_CLOSE_EVT status:%d handle:%"PRIu32" close_by_remote:%d", param->close.status,
-                 param->close.handle, param->close.async);\
-        // if commands are in progress (queue is not empty) prepare for reconnection
-
-            turn_off_leds();
-
-        // else back to idle state
-
+            param->close.handle, param->close.async);\
+            // back to idle state
+        turn_off_leds();
         break;
 
     default:
