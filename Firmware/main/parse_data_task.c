@@ -32,31 +32,10 @@ void parse_data_task(void *arg) {
         if(data) {
             ESP_LOGW(PARSE_TAG, "data received from ring buffer: %s", data);
             // parse
-            /*
-            ESP_LOGI(PARSE_TAG, "Chunk %d bytes", size);
-            ESP_LOG_BUFFER_HEX(PARSE_TAG, data, size);
-
-            for (size_t i = 0; i < size; i++) {
-            uint8_t c = data[i];
-
-            if (c == '\0') {
-                    if (idx > 0) {
-                        cmd_buf[idx] = '\0';
-                        ESP_LOGI(PARSE_TAG, "CMD: %s", cmd_buf);
-                        idx = 0;
-                    }
-                } else if (idx < sizeof(cmd_buf) - 1) {
-                    cmd_buf[idx++] = c;
-                }
-            }
-            */
-
-            translate_command(data);
-
             // send command to appropriate task
             // translate led
             // run led sequence
-            // 
+            translate_command(data);
 
             vRingbufferReturnItem(rb, (void *)data);
         }
