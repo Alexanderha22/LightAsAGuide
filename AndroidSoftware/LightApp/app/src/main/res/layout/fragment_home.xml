@@ -31,13 +31,20 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />-->
 
+    <!--
     <Switch
         android:id="@+id/home_switch_status"
         android:layout_width="135dp"
         android:layout_height="wrap_content"
         android:layout_weight="0"
         android:showText="true"
-        android:text="Status" />
+        android:text="Status" />!-->
+
+    <Button
+        android:id="@+id/home_stop_button"
+        android:layout_width="135dp"
+        android:layout_height="wrap_content"
+        android:text="Stop" />
 
     <FrameLayout
         android:id="@+id/home_light_drawable"

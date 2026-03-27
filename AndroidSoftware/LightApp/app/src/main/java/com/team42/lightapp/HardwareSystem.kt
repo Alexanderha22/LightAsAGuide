@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothSocket
 import android.content.Context
+import android.hardware.lights.Light
 import android.os.Build
 import android.os.Handler
 import android.os.Bundle
@@ -34,8 +35,11 @@ object HardwareSystem
     var sectionCount = 0
     val ledList : MutableList<LEDInfo> = mutableListOf()
     val externalModuleMap : MutableMap<Int, ExternalModule> = mutableMapOf()
-    private var state : HardwareState = HardwareState.DISCONNECTED
-    private var currentTimeStamp : Double = 0.0
+
+    // State information
+    var state : HardwareState = HardwareState.DISCONNECTED
+    var currentLightState : MutableList<LightSource> = mutableListOf()
+    var currentSession : LightSession = LightSession("")
 
     // Finds the required bluetooth connection from the list of paired devices, attempts to connect
     @RequiresApi(Build.VERSION_CODES.S)
@@ -146,11 +150,19 @@ object HardwareSystem
 
         btThread!!.write(message.toByteArray())
         state = HardwareState.RUNNING
+
+        currentSession = session
+
+        session.blocks[0].lights.forEachIndexed{i, source ->
+            currentLightState[i] = source
+        }
     }
     fun uC_StopAll()
     {
         btThread!!.write("StopAll".toByteArray())
         state = HardwareState.IDLE
+
+        currentLightState = MutableList<LightSource>(sectionCount){LightSource()}
     }
     fun uC_SetSection(source : LightSource, index : List<Int>)
     {
@@ -174,6 +186,11 @@ object HardwareSystem
         }
 
         btThread!!.write(message.toByteArray())
+
+        // Update current state
+        index.forEach{i ->
+            currentLightState[i] = source
+        }
         
     }
     fun uC_GetInfo()
@@ -362,7 +379,24 @@ object HardwareSystem
                             currentIndex += 4
                         }
 
+                        currentLightState = MutableList<LightSource>(sectionCount){LightSource()}
+
                         state = HardwareState.IDLE
+
+                        // Send test session to indicate connection
+                        val session = LightSession("Connected")
+
+                        var lights = MutableList<LightSource>(sectionCount){LightSource(0.0,0.0)}
+                        for(i in 0 ..<sectionCount)
+                        {
+                            lights = MutableList<LightSource>(sectionCount){LightSource(0.0,0.0)}
+                            lights[i] = LightSource(20.0, 0.0)
+                            session.blocks.add(SessionBlock(lights, i.toDouble()))
+                        }
+                        lights = MutableList<LightSource>(sectionCount){LightSource(0.0,0.0)}
+                        session.blocks.add(SessionBlock(lights, sectionCount.toDouble()))
+                        uC_SendSession(session)
+
                     } catch (e: NumberFormatException) {
                         Toast.makeText(
                             context,
@@ -399,12 +433,22 @@ object HardwareSystem
                 "SessionEnd" -> {
                     Toast.makeText(context, "Session Finished", Toast.LENGTH_SHORT).show()
                     state = HardwareState.IDLE
-                    currentTimeStamp = 0.0
                 }
 
                 "Timestamp" -> {
                     Toast.makeText(context, "Timestamp: ${split[1]}", Toast.LENGTH_SHORT).show()
-                    currentTimeStamp = split[1].toDouble()
+                    val timeStamp = split[1].toDouble()
+                    for(block in currentSession.blocks)
+                    {
+                        if(block.timeStamp == timeStamp)
+                        {
+                            // Switch light state to new block
+                            block.lights.forEachIndexed{i, source ->
+                                currentLightState[i] = source
+                            }
+                            break
+                        }
+                    }
                 }
 
                 else -> {

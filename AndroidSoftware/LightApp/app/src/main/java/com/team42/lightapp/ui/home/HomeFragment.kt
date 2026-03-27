@@ -48,7 +48,10 @@ class HomeFragment : Fragment() {
         val root: View = binding.root
 
         // ON OFF
-        val switch: Switch = binding.homeSwitchStatus
+        //val switch: Switch = binding.homeSwitchStatus
+
+        // OFF
+        val offButton : Button = binding.homeStopButton
 
         // LED MAP
         val mapLayout : FrameLayout = binding.homeLightDrawable
@@ -82,34 +85,24 @@ class HomeFragment : Fragment() {
             }
             lastSendTime = now
 
+            // Get a list of active groups
+            val activeGroups : MutableList<Int> = mutableListOf()
+            mapCanvasView.lightGroups.forEach { group ->
+                if(group.isActive)
+                    activeGroups.add(group.id)
+            }
+
+            if(activeGroups.isEmpty())
+                return
+
             try {
-                if(switch.isChecked)
-                {
-                    val ls : LightSource = LightSource(
-                        brightnessSeek.progress.toDouble() / 10.0,
-                        frequencySeek.progress.toDouble() / 100.0)
+                val ls : LightSource = LightSource(
+                    brightnessSeek.progress.toDouble() / 10.0,
+                    frequencySeek.progress.toDouble() / 100.0)
 
+                // Send one set section command for all active groups
+                HardwareSystem.uC_SetSection(ls, activeGroups.toList())
 
-                    // Get a list of active groups
-                    val activeGroups : MutableList<Int> = mutableListOf()
-                    mapCanvasView.lightGroups.forEach { group ->
-                        if(group.isActive)
-                            activeGroups.add(group.id)
-                    }
-                    // Send one set section command for all active groups
-                    mapWaveView.updateSection(ls, activeGroups.toList())
-                    HardwareSystem.uC_SetSection(ls, activeGroups.toList())
-
-                    /*
-                    // Send a set section command for every active group
-                    for(group in mapCanvasView.lightGroups)
-                        if(group.isActive)
-                            HardwareSystem.uC_SetSection(group.id, ls)
-                     */
-                }
-                else {
-                    HardwareSystem.uC_StopAll()
-                }
             }
             catch (e: Exception) {
                 // If there is an error, toast it
@@ -120,8 +113,9 @@ class HomeFragment : Fragment() {
             }
         }
 
-        switch.setOnClickListener{
-            Send()
+
+        offButton.setOnClickListener{
+            HardwareSystem.uC_StopAll()
         }
 
 

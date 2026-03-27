@@ -7,29 +7,19 @@ import android.graphics.Paint
 import android.hardware.lights.Light
 import android.view.View
 import android.graphics.Path
+import kotlin.math.PI
 import kotlin.math.sin
 
 class WaveVisualizerView(context: Context) : View(context) {
     private val mainPaint : Paint = Paint().apply {
         color = Color.BLUE
         style = Paint.Style.STROKE
-        strokeWidth = 5f
+        strokeWidth = 8f
         isAntiAlias = true
     }
 
-    private var sources : MutableList<LightSource> = mutableListOf()
+    private var deltaX = 0.0
 
-    fun updateSection(source : LightSource, index : List<Int>)
-    {
-        index.forEach{i ->
-            while(i >= sources.size)
-            {
-                sources.add(LightSource())
-            }
-            sources[i] = source
-        }
-        invalidate()
-    }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
@@ -44,7 +34,7 @@ class WaveVisualizerView(context: Context) : View(context) {
 
             for (x in 0..width.toInt()) {
                 val y = height / 2.0f + (height * source.brightness / 200.0f) *
-                        sin((x.toFloat() / width) * source.frequency).toFloat()
+                        sin((x.toFloat() / width) * source.frequency + deltaX).toFloat()
                 path.lineTo(x.toFloat(), y.toFloat())
             }
 
@@ -52,9 +42,14 @@ class WaveVisualizerView(context: Context) : View(context) {
         }
 
         //Draw all the lights on the screen
-        sources.forEachIndexed{i, source ->
+        HardwareSystem.currentLightState.forEachIndexed{ i, source ->
             mainPaint.setColor(GROUP_COLORS[i])
             drawWave(source)
         }
+
+        deltaX += PI / 32
+        if(deltaX >= 2 * PI)
+            deltaX = 0.0
+        postInvalidateOnAnimation()
     }
 }
