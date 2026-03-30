@@ -125,7 +125,7 @@ void run_LED_sequence(void)
         //Send timestamp to app
         char sendTimeStamp[32];
 
-        sprintf(sendTimeStamp, "Timestamp,%0.2d", currentTimeStamp);
+        sprintf(sendTimeStamp, "Timestamp,%.2f", currentTimeStamp);
 
         bt_write(sendTimeStamp, strlen(sendTimeStamp));
 
