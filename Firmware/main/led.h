@@ -143,7 +143,6 @@ extern int activeRelayGPIO;
 
 
 
-
 //Loop in order to run the loaded sequence
 void run_LED_sequence(void);
 
@@ -193,6 +192,9 @@ void turn_on_relay(void);
 void turn_off_relay(void);
 
 void initialize(void);
+
+float get_last_relay_on_time(void);
+float get_last_relay_off_time(void);
 
 #endif
 

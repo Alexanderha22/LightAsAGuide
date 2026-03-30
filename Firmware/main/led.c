@@ -1,5 +1,6 @@
 #include "led.h"
 #include "bluedroid_spp.h"
+#include "adc_read.h"
 
 //Global arrays to access all LED sections
 uint32_t LED_GPIO[] = {LEDC0_OUTPUT_IO, LEDC1_OUTPUT_IO, LEDC2_OUTPUT_IO, LEDC3_OUTPUT_IO};
@@ -17,6 +18,9 @@ int sequenceStarted;
 FSMState GlobalState;
 int activeRelayGPIO = 4;
 RelayState relayState = OFF;
+float lastRelayOnTime = 0;
+float lastRelayOffTime = 0;
+
 
 //LED setting variables
 LEDSettings Section0Settings = {0, 0, 0};
@@ -873,6 +877,9 @@ void turn_on_relay(void)
     ESP_ERROR_CHECK(esp_timer_start_once(oneshot_timer, 50000));
 
     printf("Turning on relay\n");
+
+    //Save time turned on
+    lastRelayOnTime = get_current_time();
 }
 
 //Sends signal to turn off relay (GPIO4)
@@ -889,6 +896,8 @@ void turn_off_relay(void)
     ESP_ERROR_CHECK(esp_timer_start_once(oneshot_timer, 50000));
 
     printf("Turning off relay\n");
+
+    lastRelayOffTime = get_current_time();
 }
 
 //Run all initialize functions
@@ -898,5 +907,16 @@ void initialize(void)
     init_leds();
     init_state();
     init_timers();
+    init_adc();
 }
 
+//Returns time since relay was last turned on to cover voltage spike in voltage monitoring
+float get_last_relay_on_time(void)
+{
+    return lastRelayOnTime;
+}
+
+float get_last_relay_off_time(void)
+{
+    return lastRelayOffTime;
+}

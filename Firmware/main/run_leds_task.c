@@ -11,6 +11,8 @@
 
 #include "led.h"
 
+#include "adc_read.h"
+
 
 void run_leds_task(void *arg)
 {
@@ -48,6 +50,11 @@ void run_leds_task(void *arg)
             
 
         }
+
+        //Read driver voltages every second
+        check_driver_voltages();
+
+
         vTaskDelay(1);
     }
 }
