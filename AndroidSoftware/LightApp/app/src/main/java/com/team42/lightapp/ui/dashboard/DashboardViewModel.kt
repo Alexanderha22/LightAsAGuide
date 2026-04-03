@@ -13,7 +13,5 @@ class DashboardViewModel : ViewModel() {
     }
 
     //SessionFragment will reference this as the active light session
-    var lightSession = MutableLiveData<LightSession>().apply {
-        value = EMPTY_SESSION
-    }
+    var lightSession = MutableLiveData<LightSession>(EMPTY_SESSION)
 }

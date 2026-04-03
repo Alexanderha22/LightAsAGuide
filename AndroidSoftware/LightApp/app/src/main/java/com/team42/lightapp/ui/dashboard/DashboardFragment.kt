@@ -11,6 +11,7 @@ import android.widget.TableRow
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
 import com.team42.lightapp.HardwareSystem
 import com.team42.lightapp.R
@@ -20,6 +21,7 @@ import com.team42.lightapp.databinding.FragmentPlaybackBinding
 import com.team42.lightapp.getSession
 import com.team42.lightapp.getSessionList
 import com.team42.lightapp.ui.playback.PlaybackViewModel
+import kotlin.getValue
 
 class DashboardFragment : Fragment() {
 
@@ -31,8 +33,7 @@ class DashboardFragment : Fragment() {
 
     fun createButtons(context: Context, layout : TableLayout)
     {
-        val dashboardViewModel =
-            ViewModelProvider(this).get(DashboardViewModel::class.java)
+        val dashboardViewModel : DashboardViewModel by activityViewModels()
 
         val sessionList = SessionManager.getSessionList()
 
@@ -53,15 +54,6 @@ class DashboardFragment : Fragment() {
             button.setOnClickListener {
                 val session = SessionManager.getSession(s)
                 dashboardViewModel.lightSession.value = session
-
-                try {
-                    HardwareSystem.uC_SendSession(session)
-                }
-                catch (e : NullPointerException)
-                {
-                    Toast.makeText(context, "Device not initialized", Toast.LENGTH_SHORT).show()
-                }
-
             }
 
             // Add button to table layout
@@ -96,8 +88,7 @@ class DashboardFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val dashboardViewModel =
-            ViewModelProvider(this).get(DashboardViewModel::class.java)
+        val dashboardViewModel : DashboardViewModel by activityViewModels()
 
         _binding = FragmentDashboardBinding.inflate(inflater, container, false)
         val root: View = binding.root

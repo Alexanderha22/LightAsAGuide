@@ -1,11 +1,13 @@
 package com.team42.lightapp
 
 import android.content.Context
+import android.database.Observable
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.view.MotionEvent
 import android.view.View
+import androidx.databinding.ObservableInt
 
 // Colors for the groups to pick from (based on index)
 val GROUP_COLORS : Array<Int> = arrayOf(Color.YELLOW, Color.BLUE, Color.MAGENTA, Color.RED,
@@ -25,15 +27,23 @@ class CanvasLightGroup {
     var paint : Paint = Paint()
 }
 
-class DashboardCanvasView(context: Context) : View(context) {
-    private val mainPaint : Paint = Paint()
+open class DashboardCanvasView(context: Context) : View(context) {
+    val mainPaint : Paint = Paint()
 
-    private var initialized = false
+    var initialized = false
 
     val lightGroups : MutableList<CanvasLightGroup> = mutableListOf()
 
     init {
         mainPaint.color = Color.BLACK
+    }
+
+    fun clearActiveGroups() {
+        lightGroups.forEach { group ->
+            group.isActive = false
+        }
+
+        invalidate()
     }
 
     fun updateLights() {
@@ -132,5 +142,66 @@ class DashboardCanvasView(context: Context) : View(context) {
             for(light in group.lightList)
                 drawLight(light, group.paint, group.isActive)
         }
+    }
+}
+
+class EditorCanvasView(context: Context) : DashboardCanvasView(context) {
+
+    val activeGroupId = ObservableInt()
+
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        val x : Float = event.x
+        val y : Float = event.y
+
+        if(event.action == MotionEvent.ACTION_DOWN) {
+            // Check for intersection with touch and light
+            fun pointCircleIntersect(px : Float, py : Float,
+                                     cx : Float, cy : Float, cr : Float) : Boolean {
+                return ((px - cx) * (px - cx) + (py - cy) * (py - cy)) < (cr * cr)
+            }
+
+            // Look through all lights, toggle if touched
+            // +10 to radius to make it easier to press
+            var found: Boolean = false
+            for(group in lightGroups) {
+                //Clear the lights
+                val wasActive = group.isActive
+                group.isActive = false
+
+                if(found)
+                    continue
+
+                for (light in group.lightList) {
+                    if (pointCircleIntersect(
+                            x, y,
+                            light.x, light.y, light.r + 10.0f
+                        )
+                    ) {
+                        found = true
+
+                        if(!wasActive) {
+                            group.isActive = true
+
+                            activeGroupId.set(group.id)
+                            activeGroupId.notifyChange()
+                        }
+                        else {
+                            group.isActive = false
+
+                            activeGroupId.set(-1)
+                            activeGroupId.notifyChange()
+                        }
+
+                        break
+                    }
+                }
+            }
+
+            if(!found)
+                activeGroupId.set(-1) //-1 means nothing is active
+
+            invalidate()
+        }
+        return true
     }
 }
