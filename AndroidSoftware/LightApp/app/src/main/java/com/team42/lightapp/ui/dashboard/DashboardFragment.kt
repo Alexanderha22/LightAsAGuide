@@ -13,6 +13,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
 import com.team42.lightapp.HardwareSystem
 import com.team42.lightapp.R
 import com.team42.lightapp.SessionManager
@@ -36,6 +37,7 @@ class DashboardFragment : Fragment() {
         val dashboardViewModel : DashboardViewModel by activityViewModels()
 
         val sessionList = SessionManager.getSessionList()
+        val navController = findNavController()
 
         // Create a new button for each saved session
         sessionList.forEachIndexed { index, s ->
@@ -54,6 +56,8 @@ class DashboardFragment : Fragment() {
             button.setOnClickListener {
                 val session = SessionManager.getSession(s)
                 dashboardViewModel.lightSession.value = session
+
+                navController.navigate(R.id.action_to_navigation_playback)
             }
 
             // Add button to table layout
