@@ -13,6 +13,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.SeekBar
+import android.widget.Switch
 import android.widget.TableLayout
 import android.widget.TableRow
 import android.widget.TextView
@@ -74,6 +75,7 @@ class PlaybackFragment : Fragment() {
 
         // NAME
         val sessionNameInput : EditText = binding.playbackSessionName
+        val editSwitch : Switch = binding.playbackEditSwitch
 
         // OFF
         val startButton : Button = binding.playbackStartButton
@@ -186,6 +188,21 @@ class PlaybackFragment : Fragment() {
             override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) { return }
             override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) { return }
         })
+
+        editSwitch.setOnCheckedChangeListener { switch, isChecked ->
+            sessionNameInput.isEnabled = isChecked
+
+            brightnessSeek.isEnabled = isChecked
+            brightnessNum.isEnabled = isChecked
+
+            frequencySeek.isEnabled = isChecked
+            frequencyNum.isEnabled = isChecked
+
+            blockTime.isEnabled = isChecked
+        }
+
+        //Set the session to read only
+        editSwitch.isChecked = false
 
         //Send session when pressed
         startButton.setOnClickListener{

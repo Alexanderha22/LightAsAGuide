@@ -76,6 +76,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:max="1000"
+                android:enabled="false"
                 android:thumb="@drawable/thumb_image" />
 
             <EditText
@@ -84,6 +85,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="0"
                 android:ems="2"
+                android:enabled="false"
                 android:inputType="number" />
 
             <TextView
@@ -113,6 +115,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:max="1000"
+                android:enabled="false"
                 android:thumb="@drawable/thumb_image" />
 
             <EditText
@@ -121,6 +124,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="0"
                 android:ems="2"
+                android:enabled="false"
                 android:inputType="number" />
 
             <TextView
@@ -150,6 +154,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="0"
                 android:ems="2"
+                android:enabled="false"
                 android:inputType="number" />
 
             <TextView
